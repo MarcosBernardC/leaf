@@ -69,10 +69,10 @@ fn active_toc_single_header() {
 }
 
 #[test]
-fn toc_only_includes_first_two_heading_levels() {
+fn toc_includes_all_six_markdown_heading_levels() {
     let (ss, theme) = test_assets();
     let (_, toc, _, _) = parse_markdown(
-        "# One\n## Two\n### Three\n#### Four\n",
+        "# One\n## Two\n### Three\n#### Four\n##### Five\n###### Six\n",
         &ss,
         &theme,
         &test_md_theme(),
@@ -81,10 +81,10 @@ fn toc_only_includes_first_two_heading_levels() {
     )
     .into();
 
-    assert_eq!(toc.len(), 3);
-    assert_eq!(toc[0].level, 1);
-    assert_eq!(toc[1].level, 2);
-    assert_eq!(toc[2].level, 3);
+    assert_eq!(toc.len(), 6);
+    for (index, entry) in toc.iter().enumerate() {
+        assert_eq!(entry.level, (index + 1) as u8);
+    }
 }
 
 #[test]
@@ -199,13 +199,58 @@ fn toc_levels_empty_returns_none() {
 }
 
 #[test]
-fn normalize_keeps_top_three_paliers() {
-    let toc = toc(&[(2, 0), (3, 5), (4, 10), (5, 15)]);
+fn normalize_keeps_top_six_heading_levels() {
+    let toc = toc(&[
+        (2, 0),
+        (3, 5),
+        (4, 10),
+        (5, 15),
+        (6, 20),
+        (7, 25),
+        (8, 30),
+    ]);
     let normalized = normalize_toc(toc);
     assert_eq!(
         normalized.iter().map(|e| e.level).collect::<Vec<_>>(),
-        vec![2, 3, 4]
+        vec![2, 3, 4, 5, 6, 7]
     );
+}
+
+
+#[test]
+fn toc_shows_five_levels_after_promoting_a_unique_title() {
+    let toc = toc(&[(1, 0), (2, 5), (3, 10), (4, 15), (5, 20), (6, 25)]);
+    let levels = toc_levels(&toc).unwrap();
+
+    assert_eq!(levels.root, 2);
+    assert_eq!(levels.sub, Some(3));
+    assert_eq!(levels.display_level(1), None);
+    assert_eq!(levels.display_level(2), Some(1));
+    assert_eq!(levels.display_level(3), Some(2));
+    assert_eq!(levels.display_level(4), Some(3));
+    assert_eq!(levels.display_level(5), Some(4));
+    assert_eq!(levels.display_level(6), Some(5));
+}
+
+#[test]
+fn toc_caps_visible_depth_at_five_when_root_is_repeated() {
+    let toc = toc(&[
+        (1, 0),
+        (1, 5),
+        (2, 10),
+        (3, 15),
+        (4, 20),
+        (5, 25),
+        (6, 30),
+    ]);
+    let levels = toc_levels(&toc).unwrap();
+
+    assert_eq!(levels.display_level(1), Some(1));
+    assert_eq!(levels.display_level(2), Some(2));
+    assert_eq!(levels.display_level(3), Some(3));
+    assert_eq!(levels.display_level(4), Some(4));
+    assert_eq!(levels.display_level(5), Some(5));
+    assert_eq!(levels.display_level(6), None);
 }
 
 fn make_app_with_overflowing_toc() -> App {

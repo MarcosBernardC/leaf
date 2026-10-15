@@ -1,3 +1,6 @@
+const MAX_TOC_DISPLAY_LEVELS: usize = 5;
+const MAX_MARKDOWN_HEADING_LEVELS: usize = 6;
+
 #[derive(Clone)]
 pub(crate) struct TocEntry {
     pub(crate) level: u8,
@@ -8,17 +11,15 @@ pub(crate) struct TocEntry {
 pub(crate) struct TocLevels {
     pub(crate) root: u8,
     pub(crate) sub: Option<u8>,
+    visible: Vec<u8>,
 }
 
 impl TocLevels {
     pub(crate) fn display_level(&self, level: u8) -> Option<u8> {
-        if level == self.root {
-            Some(1)
-        } else if Some(level) == self.sub {
-            Some(2)
-        } else {
-            None
-        }
+        self.visible
+            .iter()
+            .position(|&candidate| candidate == level)
+            .map(|index| (index + 1) as u8)
     }
 }
 
@@ -33,22 +34,35 @@ pub(crate) fn toc_levels(toc: &[TocEntry]) -> Option<TocLevels> {
     let levels = distinct_levels(toc);
     let &top = levels.first()?;
     let top_unique = toc.iter().filter(|e| e.level == top).count() == 1;
+
+    // Preserve the existing behavior of promoting a unique title heading.
     let root_idx = if top_unique && levels.len() >= 2 {
         1
     } else {
         0
     };
-    Some(TocLevels {
-        root: levels[root_idx],
-        sub: levels.get(root_idx + 1).copied(),
-    })
+
+    let visible: Vec<u8> = levels
+        .into_iter()
+        .skip(root_idx)
+        .take(MAX_TOC_DISPLAY_LEVELS)
+        .collect();
+
+    let root = *visible.first()?;
+    let sub = visible.get(1).copied();
+
+    Some(TocLevels { root, sub, visible })
 }
 
 pub(crate) fn normalize_toc(mut toc: Vec<TocEntry>) -> Vec<TocEntry> {
     let levels = distinct_levels(&toc);
-    let Some(&max_keep) = levels.get(2).or_else(|| levels.last()) else {
+    let Some(&max_keep) = levels
+        .get(MAX_MARKDOWN_HEADING_LEVELS - 1)
+        .or_else(|| levels.last())
+    else {
         return toc;
     };
+
     toc.retain(|entry| entry.level <= max_keep);
     toc
 }

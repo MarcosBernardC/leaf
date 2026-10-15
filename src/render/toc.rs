@@ -174,13 +174,14 @@ pub(crate) fn build_toc_line_with_index(
             ])
         }
         _ => {
+            let indent_width = (display_level as usize).saturating_mul(2);
             let title = crate::markdown::truncate_display_width(
                 &entry.title,
-                (panel_width as usize).saturating_sub(9),
+                (panel_width as usize).saturating_sub(indent_width + 5),
             );
             let bg = if active { active_bg } else { inactive_bg };
 
-            let actual_used = 1 + 4 + 1 + 1 + crate::markdown::width::display_width(&title);
+            let actual_used = 1 + indent_width + 1 + 1 + crate::markdown::width::display_width(&title);
             let inner_width = (panel_width as usize).saturating_sub(1);
             let pad_cols = inner_width.saturating_sub(actual_used);
             let pad = " ".repeat(pad_cols);
@@ -190,7 +191,7 @@ pub(crate) fn build_toc_line_with_index(
                     if active { "▎" } else { " " },
                     Style::default().fg(theme.ui.toc_accent).bg(bg),
                 ),
-                Span::styled("    ", Style::default().bg(bg)),
+                Span::styled(" ".repeat(indent_width), Style::default().bg(bg)),
                 Span::styled(
                     "•",
                     Style::default()
