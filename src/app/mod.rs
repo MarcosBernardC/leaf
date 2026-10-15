@@ -22,6 +22,55 @@ pub(crate) fn path_label(path: &Path) -> String {
 
 const PICKER_PAGE_STEP: usize = 5;
 
+#[cfg(test)]
+mod toc_number_tests {
+    use super::next_toc_number;
+
+    #[test]
+    fn numbers_siblings_and_resets_descendants() {
+        let mut counters = Vec::new();
+        let levels = [1, 2, 3, 2, 3, 1, 2];
+        let numbers: Vec<String> = levels
+            .iter()
+            .map(|&level| next_toc_number(&mut counters, level))
+            .collect();
+
+        assert_eq!(
+            numbers,
+            ["1", "1.1", "1.1.1", "1.2", "1.2.1", "2", "2.1"]
+        );
+    }
+
+    #[test]
+    fn fills_missing_levels_without_zeroes() {
+        let mut counters = Vec::new();
+
+        assert_eq!(next_toc_number(&mut counters, 1), "1");
+        assert_eq!(next_toc_number(&mut counters, 3), "1.1.1");
+        assert_eq!(next_toc_number(&mut counters, 4), "1.1.1.1");
+        assert_eq!(next_toc_number(&mut counters, 2), "1.2");
+        assert_eq!(next_toc_number(&mut counters, 3), "1.2.1");
+    }
+}
+
+fn next_toc_number(counters: &mut Vec<usize>, display_level: u8) -> String {
+    let level = usize::from(display_level).max(1);
+
+    if counters.len() < level {
+        // Los niveles omitidos comienzan en 1, nunca en 0.
+        counters.resize(level, 1);
+    } else {
+        counters.truncate(level);
+        counters[level - 1] += 1;
+    }
+
+    counters
+        .iter()
+        .map(usize::to_string)
+        .collect::<Vec<_>>()
+        .join(".")
+}
+
 fn move_picker_index_page_up(index: &mut usize, total: usize) {
     if total > 0 {
         *index = (*index).saturating_sub(PICKER_PAGE_STEP);
@@ -777,23 +826,22 @@ impl App {
         }
 
         self.toc_active_idx = active_idx;
-        let mut top_level_index = 0usize;
+        let mut toc_counters = Vec::new();
         let mut lines: Vec<Line<'static>> = Vec::new();
         let mut entries: Vec<usize> = Vec::new();
         let mut active_display_idx = None;
         let panel_width = self.toc_width_cells(self.terminal_width);
         for (idx, entry, display_level) in self.visible_toc_entries() {
             let is_active = active_idx == Some(idx);
+            let number = next_toc_number(&mut toc_counters, display_level);
+
             let line = build_toc_line_with_index(
                 entry,
                 display_level,
-                (display_level == 1).then_some(top_level_index),
+                &number,
                 is_active,
                 panel_width,
             );
-            if display_level == 1 {
-                top_level_index += 1;
-            }
             if is_active {
                 active_display_idx = Some(entries.len());
             }

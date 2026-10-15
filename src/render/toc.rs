@@ -117,109 +117,85 @@ pub(crate) fn toc_header_line() -> Line<'static> {
 pub(crate) fn build_toc_line_with_index(
     entry: &crate::markdown::toc::TocEntry,
     display_level: u8,
-    top_level_index: Option<usize>,
+    number: &str,
     active: bool,
     panel_width: u16,
 ) -> Line<'static> {
     let theme = app_theme();
     let active_bg = theme.ui.toc_active_bg;
     let inactive_bg = theme.ui.toc_inactive_bg;
+    let bg = if active { active_bg } else { inactive_bg };
 
-    match display_level {
-        1 => {
-            let index = top_level_index.unwrap_or(0) + 1;
-            let index_str = format!("{index:02}");
-            let title = crate::markdown::truncate_display_width(
-                &entry.title,
-                (panel_width as usize).saturating_sub(7),
-            );
-            let bg = if active { active_bg } else { inactive_bg };
+    let (indent_width, title_style, number_color, bold_title) = if display_level == 1 {
+        (
+            0,
+            if active {
+                theme.ui.toc_primary_active
+            } else {
+                theme.ui.toc_primary_inactive
+            },
+            if active {
+                theme.ui.toc_accent
+            } else {
+                theme.ui.toc_index_inactive
+            },
+            true,
+        )
+    } else {
+        (
+            (display_level as usize).saturating_mul(2),
+            if active {
+                theme.ui.toc_secondary_text_active
+            } else {
+                theme.ui.toc_secondary_text_inactive
+            },
+            if active {
+                theme.ui.toc_accent
+            } else {
+                theme.ui.toc_secondary_inactive
+            },
+            active,
+        )
+    };
 
-            let actual_used =
-                1 + 1 + index_str.len() + 1 + crate::markdown::width::display_width(&title);
-            let inner_width = (panel_width as usize).saturating_sub(1);
-            let pad_cols = inner_width.saturating_sub(actual_used);
-            let pad = " ".repeat(pad_cols);
+    let title = crate::markdown::truncate_display_width(
+        &entry.title,
+        (panel_width as usize).saturating_sub(indent_width + number.len() + 4),
+    );
 
-            Line::from(vec![
-                Span::styled(
-                    if active { "▎" } else { " " },
-                    Style::default().fg(theme.ui.toc_accent).bg(bg),
-                ),
-                Span::styled(" ", Style::default().bg(bg)),
-                Span::styled(
-                    index_str,
-                    Style::default()
-                        .fg(if active {
-                            theme.ui.toc_accent
-                        } else {
-                            theme.ui.toc_index_inactive
-                        })
-                        .bg(bg)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(" ", Style::default().bg(bg)),
-                Span::styled(
-                    title,
-                    Style::default()
-                        .fg(if active {
-                            theme.ui.toc_primary_active
-                        } else {
-                            theme.ui.toc_primary_inactive
-                        })
-                        .bg(bg)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(pad, Style::default().bg(bg)),
-            ])
-        }
-        _ => {
-            let indent_width = (display_level as usize).saturating_mul(2);
-            let title = crate::markdown::truncate_display_width(
-                &entry.title,
-                (panel_width as usize).saturating_sub(indent_width + 5),
-            );
-            let bg = if active { active_bg } else { inactive_bg };
+    let actual_used = 1
+        + indent_width
+        + number.len()
+        + 1
+        + crate::markdown::width::display_width(&title);
+    let inner_width = (panel_width as usize).saturating_sub(1);
+    let pad = " ".repeat(inner_width.saturating_sub(actual_used));
 
-            let actual_used = 1 + indent_width + 1 + 1 + crate::markdown::width::display_width(&title);
-            let inner_width = (panel_width as usize).saturating_sub(1);
-            let pad_cols = inner_width.saturating_sub(actual_used);
-            let pad = " ".repeat(pad_cols);
-
-            Line::from(vec![
-                Span::styled(
-                    if active { "▎" } else { " " },
-                    Style::default().fg(theme.ui.toc_accent).bg(bg),
-                ),
-                Span::styled(" ".repeat(indent_width), Style::default().bg(bg)),
-                Span::styled(
-                    "•",
-                    Style::default()
-                        .fg(if active {
-                            theme.ui.toc_accent
-                        } else {
-                            theme.ui.toc_secondary_inactive
-                        })
-                        .bg(bg),
-                ),
-                Span::styled(" ", Style::default().bg(bg)),
-                Span::styled(
-                    title,
-                    Style::default()
-                        .fg(if active {
-                            theme.ui.toc_secondary_text_active
-                        } else {
-                            theme.ui.toc_secondary_text_inactive
-                        })
-                        .bg(bg)
-                        .add_modifier(if active {
-                            Modifier::BOLD
-                        } else {
-                            Modifier::empty()
-                        }),
-                ),
-                Span::styled(pad, Style::default().bg(bg)),
-            ])
-        }
-    }
+    Line::from(vec![
+        Span::styled(
+            if active { "▎" } else { " " },
+            Style::default().fg(theme.ui.toc_accent).bg(bg),
+        ),
+        Span::styled(" ".repeat(indent_width), Style::default().bg(bg)),
+        Span::styled(
+            number.to_string(),
+            Style::default()
+                .fg(number_color)
+                .bg(bg)
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(" ", Style::default().bg(bg)),
+        Span::styled(
+            title,
+            Style::default()
+                .fg(title_style)
+                .bg(bg)
+                .add_modifier(if bold_title {
+                    Modifier::BOLD
+                } else {
+                    Modifier::empty()
+                }),
+        ),
+        Span::styled(pad, Style::default().bg(bg)),
+    ])
 }
