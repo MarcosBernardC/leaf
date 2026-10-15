@@ -486,6 +486,60 @@ fn focus_from_sub_entry_uses_top_level_ancestor() {
     assert_eq!(app.toc_active_idx, Some(5));
 }
 
+#[test]
+fn focus_next_toc_entry_visits_subentries() {
+    let mut app = make_app_with_top_and_sub_toc();
+
+    app.scroll_to_toc_display_line(0);
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(0));
+
+    app.focus_next_toc_entry();
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(1));
+
+    app.focus_next_toc_entry();
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(2));
+
+    app.focus_next_toc_entry();
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(3));
+}
+
+#[test]
+fn focus_prev_toc_entry_visits_subentries() {
+    let mut app = make_app_with_top_and_sub_toc();
+
+    app.scroll_to_toc_display_line(3);
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(3));
+
+    app.focus_prev_toc_entry();
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(2));
+
+    app.focus_prev_toc_entry();
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(1));
+}
+
+#[test]
+fn focus_toc_entry_wraps_around_visible_entries() {
+    let mut app = make_app_with_top_and_sub_toc();
+
+    app.scroll_to_toc_display_line(0);
+    app.refresh_toc_cache();
+
+    app.focus_prev_toc_entry();
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(9));
+
+    app.focus_next_toc_entry();
+    app.refresh_toc_cache();
+    assert_eq!(app.toc_active_idx, Some(0));
+}
+
 fn make_app_with_overflowing_top_sub_toc() -> App {
     let entries = vec![
         (1u8, 0usize),

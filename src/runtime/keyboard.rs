@@ -686,11 +686,11 @@ fn reload_helper(app: &mut App, ss: &SyntaxSet, themes: &ThemeSet) {
 fn handle_document_keys(app: &mut App, key: &KeyEvent) -> bool {
     match key.code {
         KeyCode::Char('J') if app.can_scroll_toc() => {
-            app.focus_next_top_level_toc();
+            app.focus_next_toc_entry();
             true
         }
         KeyCode::Char('K') if app.can_scroll_toc() => {
-            app.focus_prev_top_level_toc();
+            app.focus_prev_toc_entry();
             true
         }
         KeyCode::Char('D') if app.can_scroll_toc() => {

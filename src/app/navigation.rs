@@ -460,6 +460,62 @@ impl App {
         self.cycle_visible_top_level(CycleDirection::Backward);
     }
 
+    pub(crate) fn focus_next_toc_entry(&mut self) {
+        self.cycle_visible_toc_entries(CycleDirection::Forward);
+    }
+
+    pub(crate) fn focus_prev_toc_entry(&mut self) {
+        self.cycle_visible_toc_entries(CycleDirection::Backward);
+    }
+
+    fn cycle_visible_toc_entries(&mut self, direction: CycleDirection) {
+        let entries = self.visible_toc_display_indices();
+        if entries.is_empty() {
+            return;
+        }
+
+        self.dismiss_toc_scroll_hint_if_visible();
+
+        let active_position = self.toc_active_display_idx.and_then(|active_idx| {
+            if !self.is_display_idx_in_toc_window(active_idx) {
+                return None;
+            }
+            entries
+                .iter()
+                .rposition(|(display_idx, _)| *display_idx <= active_idx)
+        });
+
+        let target_position = match active_position {
+            Some(position) => {
+                let len = entries.len();
+                match direction {
+                    CycleDirection::Forward => (position + 1) % len,
+                    CycleDirection::Backward => (position + len - 1) % len,
+                }
+            }
+            None => match direction {
+                CycleDirection::Forward => 0,
+                CycleDirection::Backward => entries.len() - 1,
+            },
+        };
+
+        self.scroll_to_toc_display_line(entries[target_position].0);
+    }
+
+    fn visible_toc_display_indices(&self) -> Vec<(usize, usize)> {
+        let Some(area) = self.toc_list_area else {
+            return Vec::new();
+        };
+        let offset = self.toc_scroll_offset(area.height);
+
+        self.visible_toc_entries()
+            .enumerate()
+            .skip(offset)
+            .take(area.height as usize)
+            .map(|(display_idx, (entry_idx, _, _))| (display_idx, entry_idx))
+            .collect()
+    }
+
     fn cycle_visible_top_level(&mut self, direction: CycleDirection) {
         let visible_tops = self.visible_top_level_display_indices();
         if visible_tops.is_empty() {
