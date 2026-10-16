@@ -452,10 +452,12 @@ impl App {
         self.clamp_scroll();
     }
 
+    #[cfg(test)]
     pub(crate) fn focus_next_top_level_toc(&mut self) {
         self.cycle_visible_top_level(CycleDirection::Forward);
     }
 
+    #[cfg(test)]
     pub(crate) fn focus_prev_top_level_toc(&mut self) {
         self.cycle_visible_top_level(CycleDirection::Backward);
     }
@@ -516,6 +518,7 @@ impl App {
             .collect()
     }
 
+    #[cfg(test)]
     fn cycle_visible_top_level(&mut self, direction: CycleDirection) {
         let visible_tops = self.visible_top_level_display_indices();
         if visible_tops.is_empty() {
@@ -551,6 +554,7 @@ impl App {
         self.scroll_to_toc_display_line(target_display_idx);
     }
 
+    #[cfg(test)]
     fn visible_top_level_display_indices(&self) -> Vec<(usize, usize)> {
         let Some(area) = self.toc_list_area else {
             return Vec::new();
