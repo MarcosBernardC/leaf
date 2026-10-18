@@ -1,5 +1,5 @@
 use crate::{
-    markdown::{parse_markdown_with_width, ParseResult},
+    markdown::{parse_markdown_with_options, ParseResult},
     theme::{
         app_theme, current_syntect_theme, current_theme_selection, set_theme_preset,
         set_theme_selection, theme_preset_index, ThemePreset, ThemeSelection, THEME_PRESETS,
@@ -118,7 +118,7 @@ impl App {
 
         let theme = current_syntect_theme(themes);
         let at = app_theme();
-        let parsed = parse_markdown_with_width(
+        let parsed = parse_markdown_with_options(
             &self.source,
             ss,
             theme,
@@ -126,6 +126,7 @@ impl App {
             &at.markdown,
             self.file_mode,
             self.code_line_numbers,
+            self.markdown_apa_indent,
         );
         self.store_theme_preview(preset, parsed.clone());
         self.replace_content(parsed);
@@ -147,7 +148,7 @@ impl App {
             } else {
                 let theme = current_syntect_theme(themes);
                 let at = app_theme();
-                let parsed = parse_markdown_with_width(
+                let parsed = parse_markdown_with_options(
                     &self.source,
                     ss,
                     theme,
@@ -155,6 +156,7 @@ impl App {
                     &at.markdown,
                     self.file_mode,
                     self.code_line_numbers,
+                    self.markdown_apa_indent,
                 );
                 self.replace_content(parsed);
             }

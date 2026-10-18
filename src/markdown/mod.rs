@@ -175,6 +175,7 @@ fn end_paragraph(
     render_width: usize,
     theme: &MarkdownTheme,
     marker_color: Option<Color>,
+    markdown_apa_indent: bool,
 ) {
     flush_wrapped_spans(
         lines,
@@ -186,6 +187,7 @@ fn end_paragraph(
         render_width,
         theme,
         marker_color,
+        markdown_apa_indent && blockquote_depth == 0 && item_stack.is_empty(),
     );
     let gap = if blockquote_depth > 0 {
         if !item_stack.is_empty() {
@@ -230,6 +232,7 @@ fn flush_pending_inline_if_any(
         render_width,
         theme,
         marker_color,
+        false,
     );
     true
 }
@@ -404,6 +407,27 @@ pub(crate) fn parse_markdown(
     )
 }
 
+pub(crate) fn parse_markdown_with_options_default_width(
+    src: &str,
+    ss: &syntect::parsing::SyntaxSet,
+    theme: &syntect::highlighting::Theme,
+    md_theme: &MarkdownTheme,
+    file_mode: bool,
+    code_line_numbers: bool,
+    markdown_apa_indent: bool,
+) -> ParseResult {
+    parse_markdown_with_options(
+        src,
+        ss,
+        theme,
+        DEFAULT_RENDER_WIDTH,
+        md_theme,
+        file_mode,
+        code_line_numbers,
+        markdown_apa_indent,
+    )
+}
+
 pub(crate) fn parse_markdown_with_width(
     src: &str,
     ss: &syntect::parsing::SyntaxSet,
@@ -412,6 +436,28 @@ pub(crate) fn parse_markdown_with_width(
     theme_colors: &MarkdownTheme,
     file_mode: bool,
     code_line_numbers: bool,
+) -> ParseResult {
+    parse_markdown_with_options(
+        src,
+        ss,
+        theme,
+        render_width,
+        theme_colors,
+        file_mode,
+        code_line_numbers,
+        false,
+    )
+}
+
+pub(crate) fn parse_markdown_with_options(
+    src: &str,
+    ss: &syntect::parsing::SyntaxSet,
+    theme: &syntect::highlighting::Theme,
+    render_width: usize,
+    theme_colors: &MarkdownTheme,
+    file_mode: bool,
+    code_line_numbers: bool,
+    markdown_apa_indent: bool,
 ) -> ParseResult {
     let original_src = src;
     let (src, fm_pairs) = frontmatter::extract_frontmatter(src);
@@ -537,6 +583,7 @@ pub(crate) fn parse_markdown_with_width(
                     render_width,
                     theme_colors,
                     blockquote_color,
+                    markdown_apa_indent,
                 );
                 wraps = true;
                 last_block = LastBlock::Paragraph;
@@ -789,6 +836,7 @@ pub(crate) fn parse_markdown_with_width(
                     render_width,
                     theme_colors,
                     blockquote_color,
+                    false,
                 );
                 wraps = true;
             }
@@ -822,6 +870,7 @@ pub(crate) fn parse_markdown_with_width(
                             render_width,
                             theme_colors,
                             blockquote_color,
+                            false,
                         );
                         wraps = true;
                     }
@@ -931,6 +980,7 @@ pub(crate) fn parse_markdown_with_width(
                         render_width,
                         theme_colors,
                         blockquote_color,
+                        false,
                     );
                 }
                 let captured_lines = std::mem::take(&mut lines);

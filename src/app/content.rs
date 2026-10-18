@@ -1,6 +1,6 @@
 use super::App;
 use crate::markdown::{
-    hash_file_contents, hash_str, parse_markdown_with_width, read_file_state, ParseResult,
+    hash_file_contents, hash_str, parse_markdown_with_options, read_file_state, ParseResult,
 };
 use std::{
     path::PathBuf,
@@ -262,7 +262,7 @@ impl App {
                 self.source = wrapped;
                 let theme = current_syntect_theme(themes);
                 let at = app_theme();
-                let parsed = parse_markdown_with_width(
+                let parsed = parse_markdown_with_options(
                     &self.source,
                     ss,
                     theme,
@@ -270,6 +270,7 @@ impl App {
                     &at.markdown,
                     self.file_mode,
                     self.code_line_numbers,
+                    self.markdown_apa_indent,
                 );
                 self.invalidate_theme_previews();
                 self.store_current_theme_preview_from(&parsed);
@@ -284,7 +285,7 @@ impl App {
         let theme = current_syntect_theme(themes);
         let at = app_theme();
         let old_total = self.total();
-        let parsed = parse_markdown_with_width(
+        let parsed = parse_markdown_with_options(
             &self.source,
             ss,
             theme,
@@ -292,6 +293,7 @@ impl App {
             &at.markdown,
             self.file_mode,
             self.code_line_numbers,
+            self.markdown_apa_indent,
         );
         let new_total = parsed.lines.len();
 

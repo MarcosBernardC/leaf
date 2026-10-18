@@ -139,3 +139,7 @@ watch = false
 # Percentages above 100 are allowed. Invalid values use the default.
 # Default: "20rows"
 # page-scroll-size = "20rows"
+
+# Indent the first line of regular Markdown paragraphs (APA style).
+# Default: false
+# markdown-apa-indent = false

@@ -231,6 +231,7 @@ pub(crate) struct App {
     reverse_mode: bool,
     pub(super) file_mode: bool,
     pub(super) code_line_numbers: bool,
+    pub(super) markdown_apa_indent: bool, // New
     scroll_with_enter: bool,
     page_scroll_size: crate::config::PageScrollSize,
     max_width: Option<usize>,
@@ -420,6 +421,7 @@ impl App {
             reverse_mode: false,
             file_mode: false,
             code_line_numbers: true,
+            markdown_apa_indent: false,
             scroll_with_enter: false,
             page_scroll_size: crate::config::PageScrollSize::default(),
             max_width: None,
@@ -460,6 +462,10 @@ impl App {
 
     pub(crate) fn set_code_line_numbers(&mut self, value: bool) {
         self.code_line_numbers = value;
+    }
+
+    pub(crate) fn set_markdown_apa_indent(&mut self, value: bool) {
+        self.markdown_apa_indent = value;
     }
 
     pub(crate) fn set_scroll_with_enter(&mut self, value: bool) {

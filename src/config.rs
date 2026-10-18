@@ -78,6 +78,8 @@ pub(crate) struct LeafConfig {
     pub(crate) themes: BTreeMap<String, CustomThemeConfig>,
     #[serde(skip)]
     pub(crate) config_dir: Option<PathBuf>,
+    #[serde(rename = "markdown-apa-indent")]
+    pub(crate) markdown_apa_indent: Option<bool>,
 }
 
 impl LeafConfig {

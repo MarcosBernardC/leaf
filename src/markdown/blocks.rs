@@ -88,6 +88,7 @@ pub(super) fn flush_wrapped_spans(
     render_width: usize,
     theme: &MarkdownTheme,
     marker_color: Option<Color>,
+    first_line_indent: bool,
 ) {
     if blockquote_depth > 0 && item_stack.is_empty() {
         push_wrapped_blockquote_lines(
@@ -123,7 +124,19 @@ pub(super) fn flush_wrapped_spans(
             render_width,
         );
     } else if !spans.is_empty() {
-        push_wrapped_prefixed_lines(lines, ranges, spans, vec![], vec![], render_width);
+        let first_prefix = if first_line_indent {
+            vec![ratatui::text::Span::raw("    ")]
+        } else {
+            vec![]
+        };
+        push_wrapped_prefixed_lines(
+            lines,
+            ranges,
+            spans,
+            first_prefix,
+            vec![],
+            render_width,
+        );
     }
 }
 

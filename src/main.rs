@@ -30,7 +30,10 @@ mod update;
 
 use app::{mode::detect_mode, App, AppConfig, AppMode};
 use cli::{parse_cli, print_usage, print_version, CliOptions};
-use markdown::{hash_str, parse_markdown, parse_markdown_with_width, read_file_state};
+use markdown::{
+    hash_str, parse_markdown_with_options,
+    parse_markdown_with_options_default_width, read_file_state,
+};
 use runtime::run;
 use terminal::{finish_with_restore, TerminalSession};
 use theme::{
@@ -396,6 +399,7 @@ fn main() -> Result<()> {
     let max_width = resolve_configured_width(cli_width, user_config.width);
     let main_line_numbers = resolve_main_line_numbers(user_config.main_line_numbers);
     let code_line_numbers = resolve_code_line_numbers(user_config.code_line_numbers);
+    let markdown_apa_indent = user_config.markdown_apa_indent.unwrap_or(false);
     let tab_title_length = resolve_tab_title_length_n(user_config.tab_title_length);
     let tab_title_max_filename_len = tab_title_length.and_then(tab_title_n_to_max_filename_len);
     let file_picker_width = resolve_file_picker_width(user_config.file_picker_width);
@@ -600,7 +604,7 @@ fn main() -> Result<()> {
         let format = inline::resolve_format(spec, is_tty);
 
         let at = app_theme();
-        let mut parsed = parse_markdown_with_width(
+        let mut parsed = parse_markdown_with_options(
             &src,
             ss,
             &theme,
@@ -608,6 +612,7 @@ fn main() -> Result<()> {
             &at.markdown,
             file_mode,
             code_line_numbers,
+            markdown_apa_indent,
         );
 
         while parsed.lines.last().is_some_and(|l| {
@@ -628,7 +633,15 @@ fn main() -> Result<()> {
     let parsed = if diff_files.is_some() {
         crate::markdown::ParseResult::default()
     } else {
-        parse_markdown(&src, ss, &theme, &at.markdown, file_mode, code_line_numbers)
+        parse_markdown_with_options_default_width(
+            &src,
+            ss,
+            &theme,
+            &at.markdown,
+            file_mode,
+            code_line_numbers,
+            markdown_apa_indent,
+        )
     };
     let crate::markdown::ParseResult {
         lines,
@@ -699,6 +712,7 @@ fn main() -> Result<()> {
     app.set_editor_config(Some(resolved_editor));
     app.set_line_numbers_visible(main_line_numbers);
     app.set_code_line_numbers(code_line_numbers);
+    app.set_markdown_apa_indent(markdown_apa_indent);
     app.set_scroll_with_enter(user_config.scroll_with_enter.unwrap_or(false));
     app.set_config_warning(config_warning);
     if let Some(dir) = dir_arg {
