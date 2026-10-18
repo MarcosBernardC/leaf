@@ -112,13 +112,12 @@ fn footnote_heading_does_not_advance_document_numbering() {
     let src = r#"# Introduction
 ## Goals[^note]
 
-[^note]:
-    # Footnote heading
+[^note]: # Footnote heading
 
 # Installation
 "#;
 
-    let (_, toc, _, _) = parse_markdown(src, &ss, &theme, &test_md_theme(), false, true).into();
+    let (lines, toc, _, _) = parse_markdown(src, &ss, &theme, &test_md_theme(), false, true).into();
 
     let main_heading_numbers: Vec<&str> = toc
         .iter()
@@ -129,6 +128,17 @@ fn footnote_heading_does_not_advance_document_numbering() {
         })
         .map(|entry| entry.number.as_str())
         .collect();
+
+    let footnote_heading = lines
+        .iter()
+        .map(line_plain_text)
+        .find(|line| line.contains("Footnote heading"))
+        .expect("el encabezado de la nota al pie debe renderizarse");
+
+    assert!(
+        footnote_heading.contains("I. Footnote heading"),
+        "el encabezado de la nota al pie debe conservar su numeración propia: {footnote_heading:?}"
+    );
 
     assert_eq!(main_heading_numbers, ["I.", "1.1.", "II."]);
 }
