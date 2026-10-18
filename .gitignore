@@ -13,3 +13,6 @@ npm/platforms/*/leaf.exe
 
 # Logs
 *.log
+
+# backups
+*.backup
