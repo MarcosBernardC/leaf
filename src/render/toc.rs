@@ -163,11 +163,8 @@ pub(crate) fn build_toc_line_with_index(
         (panel_width as usize).saturating_sub(indent_width + number.len() + 4),
     );
 
-    let actual_used = 1
-        + indent_width
-        + number.len()
-        + 1
-        + crate::markdown::width::display_width(&title);
+    let actual_used =
+        1 + indent_width + number.len() + 1 + crate::markdown::width::display_width(&title);
     let inner_width = (panel_width as usize).saturating_sub(1);
     let pad = " ".repeat(inner_width.saturating_sub(actual_used));
 

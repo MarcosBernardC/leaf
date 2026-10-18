@@ -2,6 +2,7 @@ mod blocks;
 mod fences;
 mod footnotes;
 mod frontmatter;
+mod heading_number;
 mod highlight;
 mod latex;
 mod links;
@@ -16,6 +17,7 @@ pub(crate) mod toc;
 pub(crate) mod width;
 mod wrapping;
 
+use heading_number::HeadingNumbering;
 pub(crate) use highlight::highlight_line;
 pub(crate) use links::{LinkId, LinkSpan};
 pub(crate) use syntax::resolve_syntax;
@@ -125,6 +127,7 @@ fn end_heading(
     lines: &mut Vec<Line<'static>>,
     ranges: &mut Vec<LinkSpan>,
     toc: &mut Vec<TocEntry>,
+    heading_numbering: &mut HeadingNumbering,
     spans: &mut Vec<LinkedSpan>,
     in_heading: &mut Option<u8>,
     render_width: usize,
@@ -134,6 +137,7 @@ fn end_heading(
         lines,
         ranges,
         toc,
+        heading_numbering,
         spans,
         in_heading.unwrap_or(1),
         render_width,
@@ -425,6 +429,7 @@ pub(crate) fn parse_markdown_with_width(
         state.mark_all_new(lines.len());
     }
     let mut toc: Vec<TocEntry> = Vec::new();
+    let mut heading_numbering = HeadingNumbering::default();
 
     let mut spans: Vec<LinkedSpan> = Vec::new();
     let mut in_heading: Option<u8> = None;
@@ -506,6 +511,7 @@ pub(crate) fn parse_markdown_with_width(
                     &mut lines,
                     &mut link_spans,
                     &mut toc,
+                    &mut heading_numbering,
                     &mut spans,
                     &mut in_heading,
                     render_width,
@@ -909,6 +915,7 @@ pub(crate) fn parse_markdown_with_width(
                     &mut last_block,
                     &mut state,
                     &mut toc,
+                    &mut heading_numbering,
                 );
                 footnotes.start_definition(label.to_string(), def_src_line, snapshot);
             }
@@ -946,6 +953,7 @@ pub(crate) fn parse_markdown_with_width(
                     &mut last_block,
                     &mut state,
                     &mut toc,
+                    &mut heading_numbering,
                 );
             }
             _ => {}

@@ -9,7 +9,7 @@ fn h1_headings_render_double_rule_without_bottom_spacing() {
         parse_markdown("# 東京\n", &ss, &theme, &test_md_theme(), false, true).into();
     let rendered = rendered_non_empty_lines(&lines);
 
-    assert_eq!(rendered[0], "東京");
+    assert_eq!(rendered[0], "I. 東京");
     assert_eq!(rendered[1], "═".repeat(display_width("東京")));
 }
 

@@ -5,6 +5,7 @@ const MAX_MARKDOWN_HEADING_LEVELS: usize = 6;
 pub(crate) struct TocEntry {
     pub(crate) level: u8,
     pub(crate) title: String,
+    pub(crate) number: String,
     pub(crate) line: usize,
 }
 

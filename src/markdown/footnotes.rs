@@ -8,6 +8,7 @@ use ratatui::{
 use crate::theme::MarkdownTheme;
 
 use super::blocks::push_rule_line;
+use super::heading_number::HeadingNumbering;
 use super::latex;
 use super::links::{restore_linked_spans, LinkSpan, LinkedSpan};
 use super::lists::{ItemState, ListKind};
@@ -54,6 +55,7 @@ pub(super) struct DefinitionSnapshot {
     pub(super) last_block: LastBlock,
     pub(super) state: LineMapState,
     pub(super) toc: Vec<TocEntry>,
+    pub(super) heading_numbering: HeadingNumbering,
 }
 
 impl DefinitionSnapshot {
@@ -75,6 +77,7 @@ impl DefinitionSnapshot {
         last_block: &mut LastBlock,
         state: &mut LineMapState,
         toc: &mut Vec<TocEntry>,
+        heading_numbering: &mut HeadingNumbering,
     ) -> Self {
         Self {
             spans: std::mem::take(spans),
@@ -93,6 +96,7 @@ impl DefinitionSnapshot {
             last_block: std::mem::replace(last_block, LastBlock::Other),
             state: std::mem::replace(state, LineMapState::new()),
             toc: std::mem::take(toc),
+            heading_numbering: std::mem::take(heading_numbering),
         }
     }
 
@@ -115,6 +119,7 @@ impl DefinitionSnapshot {
         last_block: &mut LastBlock,
         state: &mut LineMapState,
         toc: &mut Vec<TocEntry>,
+        heading_numbering: &mut HeadingNumbering,
     ) {
         *spans = self.spans;
         *lines = self.lines;
@@ -132,6 +137,7 @@ impl DefinitionSnapshot {
         *last_block = self.last_block;
         *state = self.state;
         *toc = self.toc;
+        *heading_numbering = self.heading_numbering;
     }
 }
 

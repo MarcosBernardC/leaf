@@ -402,6 +402,7 @@ mod tests {
             vec![TocEntry {
                 level: 1,
                 title: "Heading".to_string(),
+                number: "I.".to_string(),
                 line: 0,
             }],
             "test".to_string(),

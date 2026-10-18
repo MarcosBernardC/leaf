@@ -11,6 +11,7 @@ fn toc(entries: &[(u8, usize)]) -> Vec<TocEntry> {
         .map(|(i, (level, line))| TocEntry {
             level: *level,
             title: format!("Section {}", i + 1),
+            number: String::new(),
             line: *line,
         })
         .collect()
@@ -85,6 +86,51 @@ fn toc_includes_all_six_markdown_heading_levels() {
     for (index, entry) in toc.iter().enumerate() {
         assert_eq!(entry.level, (index + 1) as u8);
     }
+}
+
+#[test]
+fn toc_numbers_match_hierarchical_heading_levels() {
+    let (ss, theme) = test_assets();
+    let src = "# Introduction\n\
+               ## Goals\n\
+               ### Requirements\n\
+               ## Scope\n\
+               # Installation\n\
+               ## Dependencies\n";
+
+    let (_, toc, _, _) = parse_markdown(src, &ss, &theme, &test_md_theme(), false, true).into();
+
+    let numbers: Vec<&str> = toc.iter().map(|entry| entry.number.as_str()).collect();
+
+    assert_eq!(numbers, ["I.", "1.1.", "1.1.1.", "1.2.", "II.", "2.1."]);
+}
+
+#[test]
+fn footnote_heading_does_not_advance_document_numbering() {
+    let (ss, theme) = test_assets();
+
+    let src = r#"# Introduction
+## Goals[^note]
+
+[^note]:
+    # Footnote heading
+
+# Installation
+"#;
+
+    let (_, toc, _, _) = parse_markdown(src, &ss, &theme, &test_md_theme(), false, true).into();
+
+    let main_heading_numbers: Vec<&str> = toc
+        .iter()
+        .filter(|entry| {
+            entry.title.starts_with("Introduction")
+                || entry.title.starts_with("Goals")
+                || entry.title.starts_with("Installation")
+        })
+        .map(|entry| entry.number.as_str())
+        .collect();
+
+    assert_eq!(main_heading_numbers, ["I.", "1.1.", "II."]);
 }
 
 #[test]
@@ -200,22 +246,13 @@ fn toc_levels_empty_returns_none() {
 
 #[test]
 fn normalize_keeps_top_six_heading_levels() {
-    let toc = toc(&[
-        (2, 0),
-        (3, 5),
-        (4, 10),
-        (5, 15),
-        (6, 20),
-        (7, 25),
-        (8, 30),
-    ]);
+    let toc = toc(&[(2, 0), (3, 5), (4, 10), (5, 15), (6, 20), (7, 25), (8, 30)]);
     let normalized = normalize_toc(toc);
     assert_eq!(
         normalized.iter().map(|e| e.level).collect::<Vec<_>>(),
         vec![2, 3, 4, 5, 6, 7]
     );
 }
-
 
 #[test]
 fn toc_shows_five_levels_after_promoting_a_unique_title() {
@@ -234,15 +271,7 @@ fn toc_shows_five_levels_after_promoting_a_unique_title() {
 
 #[test]
 fn toc_caps_visible_depth_at_five_when_root_is_repeated() {
-    let toc = toc(&[
-        (1, 0),
-        (1, 5),
-        (2, 10),
-        (3, 15),
-        (4, 20),
-        (5, 25),
-        (6, 30),
-    ]);
+    let toc = toc(&[(1, 0), (1, 5), (2, 10), (3, 15), (4, 20), (5, 25), (6, 30)]);
     let levels = toc_levels(&toc).unwrap();
 
     assert_eq!(levels.display_level(1), Some(1));

@@ -6,6 +6,7 @@ use ratatui::{
 use syntect::{highlighting::Theme, parsing::SyntaxSet};
 use unicode_width::UnicodeWidthStr;
 
+use super::heading_number::HeadingNumbering;
 use super::latex;
 use super::links::{emit_linked_line, LinkSpan, LinkedSpan};
 use super::lists::{list_item_prefix, ItemState, ListKind};
@@ -149,6 +150,7 @@ pub(super) fn push_heading_lines(
     lines: &mut Vec<Line<'static>>,
     ranges: &mut Vec<LinkSpan>,
     toc: &mut Vec<TocEntry>,
+    heading_numbering: &mut HeadingNumbering,
     spans: &mut Vec<LinkedSpan>,
     level: u8,
     render_width: usize,
@@ -167,13 +169,22 @@ pub(super) fn push_heading_lines(
     };
     let heading_style = Style::default().fg(color).add_modifier(modifier);
     let title: String = spans.iter().map(|s| s.span.content.as_ref()).collect();
+    let number = heading_numbering.next(level);
     toc.push(TocEntry {
         level,
         title: title.clone(),
+        number: number.clone(),
         line: lines.len(),
     });
-    let styled_spans: Vec<LinkedSpan> = spans
-        .drain(..)
+
+    let mut numbered_spans = vec![LinkedSpan::new(
+        Span::styled(format!("{number} "), heading_style),
+        None,
+    )];
+    numbered_spans.extend(spans.drain(..));
+
+    let styled_spans: Vec<LinkedSpan> = numbered_spans
+        .into_iter()
         .map(|LinkedSpan { span, link_id }| {
             let mut style = heading_style;
             if span.style.bg.is_some() {
