@@ -6,7 +6,9 @@ use ratatui::style::Color;
 use std::{borrow::Cow, sync::RwLock};
 use syntect::{highlighting::Theme, highlighting::ThemeSet};
 
-use presets::{ARCTIC_THEME, FOREST_THEME, OCEAN_DARK_THEME, SOLARIZED_DARK_THEME};
+use presets::{
+    ARCTIC_THEME, FOREST_THEME, OCEAN_DARK_THEME, SOLARIZED_DARK_THEME, TERRA_CREAM_THEME,
+};
 
 pub(crate) use self::serde::CustomThemeConfig;
 #[cfg(test)]
@@ -20,6 +22,7 @@ pub(crate) enum ThemePreset {
     Forest = 1,
     OceanDark = 2,
     SolarizedDark = 3,
+    TerraCream = 4,
 }
 
 impl Default for ThemePreset {
@@ -148,11 +151,12 @@ pub(crate) struct MarkdownTheme {
 }
 
 pub(crate) const DEFAULT_PRESET: ThemePreset = ThemePreset::OceanDark;
-pub(crate) const THEME_PRESETS: [ThemePreset; 4] = [
+pub(crate) const THEME_PRESETS: [ThemePreset; 5] = [
     ThemePreset::Arctic,
     ThemePreset::Forest,
     ThemePreset::OceanDark,
     ThemePreset::SolarizedDark,
+    ThemePreset::TerraCream,
 ];
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -212,6 +216,7 @@ pub(crate) fn parse_theme_preset(name: &str) -> Option<ThemePreset> {
         "ocean" | "ocean-dark" | "dark" => Some(ThemePreset::OceanDark),
         "forest" => Some(ThemePreset::Forest),
         "solarized" | "solarized-dark" => Some(ThemePreset::SolarizedDark),
+        "terra-cream" => Some(ThemePreset::TerraCream),
         _ => None,
     }
 }
@@ -222,6 +227,7 @@ pub(crate) fn theme_preset_label(preset: ThemePreset) -> &'static str {
         ThemePreset::OceanDark => "Ocean Dark",
         ThemePreset::Forest => "Forest",
         ThemePreset::SolarizedDark => "Solarized Dark",
+        ThemePreset::TerraCream => "Terra Cream",
     }
 }
 
@@ -238,6 +244,7 @@ pub(crate) fn theme_by_preset(preset: ThemePreset) -> &'static AppTheme {
         ThemePreset::OceanDark => &OCEAN_DARK_THEME,
         ThemePreset::Forest => &FOREST_THEME,
         ThemePreset::SolarizedDark => &SOLARIZED_DARK_THEME,
+        ThemePreset::TerraCream => &TERRA_CREAM_THEME,
     }
 }
 

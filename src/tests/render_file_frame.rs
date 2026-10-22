@@ -575,6 +575,7 @@ fn theme_presets_define_meta_note_colors() {
         ThemePreset::OceanDark,
         ThemePreset::Forest,
         ThemePreset::SolarizedDark,
+        ThemePreset::TerraCream,
     ] {
         let t = theme_by_preset(preset);
 

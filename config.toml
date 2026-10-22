@@ -11,7 +11,7 @@
 # Command-line arguments always take priority over this file.
 
 # Color theme
-# Built-in themes: arctic, forest, ocean, solarized-dark
+# Built-in themes: arctic, forest, ocean, solarized-dark, terra-cream
 # Or set this to a custom theme file path.
 # Relative paths are resolved from this config file's directory.
 # Or set this to the name of a file in the themes folder next to this file,

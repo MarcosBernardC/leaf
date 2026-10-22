@@ -20,6 +20,10 @@ fn parse_theme_preset_supports_ocean_and_forest() {
         Some(ThemePreset::SolarizedDark)
     );
     assert_eq!(parse_theme_preset("nope"), None);
+    assert_eq!(
+        parse_theme_preset("terra-cream"),
+        Some(ThemePreset::TerraCream)
+    );
 }
 
 #[test]
