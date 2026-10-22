@@ -24,6 +24,20 @@ fn parse_theme_preset_supports_ocean_and_forest() {
         parse_theme_preset("terra-cream"),
         Some(ThemePreset::TerraCream)
     );
+    assert_eq!(
+        parse_theme_preset("terra-cream-dark"),
+        Some(ThemePreset::TerraCreamDark)
+    );
+}
+
+#[test]
+fn terra_cream_dark_uses_native_palette() {
+    let theme = crate::theme::theme_by_preset(ThemePreset::TerraCreamDark);
+
+    assert_eq!(theme.ui.content_bg, Color::Rgb(33, 31, 28));
+    assert_eq!(theme.ui.toc_bg, Color::Rgb(33, 31, 28));
+    assert_eq!(theme.markdown.text, Color::Rgb(232, 224, 212));
+    assert_eq!(theme.markdown.heading_1, Color::Rgb(225, 138, 85));
 }
 
 #[test]

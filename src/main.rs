@@ -31,8 +31,8 @@ mod update;
 use app::{mode::detect_mode, App, AppConfig, AppMode};
 use cli::{parse_cli, print_usage, print_version, CliOptions};
 use markdown::{
-    hash_str, parse_markdown_with_options,
-    parse_markdown_with_options_default_width, read_file_state,
+    hash_str, parse_markdown_with_options, parse_markdown_with_options_default_width,
+    read_file_state,
 };
 use runtime::run;
 use terminal::{finish_with_restore, TerminalSession};

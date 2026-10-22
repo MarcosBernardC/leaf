@@ -279,7 +279,7 @@ leaf --config
 This opens the configuration file in your editor. If the file does not exist yet, **leaf** creates it with documented defaults.
 
 ```toml
-theme = "ocean"              # arctic, forest, ocean, solarized-dark, terra-cream, or a custom theme file
+theme = "ocean"              # arctic, forest, ocean, solarized-dark, terra-cream, terra-cream-dark, or a custom theme file
 editor = "nano"              # any editor in PATH
 watch = false                # auto-reload when opening a file
 width = 80                   # maximum content width (min: 20, default: terminal width)

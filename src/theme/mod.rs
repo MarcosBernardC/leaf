@@ -7,7 +7,8 @@ use std::{borrow::Cow, sync::RwLock};
 use syntect::{highlighting::Theme, highlighting::ThemeSet};
 
 use presets::{
-    ARCTIC_THEME, FOREST_THEME, OCEAN_DARK_THEME, SOLARIZED_DARK_THEME, TERRA_CREAM_THEME,
+    ARCTIC_THEME, FOREST_THEME, OCEAN_DARK_THEME, SOLARIZED_DARK_THEME, TERRA_CREAM_DARK_THEME,
+    TERRA_CREAM_THEME,
 };
 
 pub(crate) use self::serde::CustomThemeConfig;
@@ -23,6 +24,7 @@ pub(crate) enum ThemePreset {
     OceanDark = 2,
     SolarizedDark = 3,
     TerraCream = 4,
+    TerraCreamDark = 5,
 }
 
 impl Default for ThemePreset {
@@ -151,12 +153,13 @@ pub(crate) struct MarkdownTheme {
 }
 
 pub(crate) const DEFAULT_PRESET: ThemePreset = ThemePreset::OceanDark;
-pub(crate) const THEME_PRESETS: [ThemePreset; 5] = [
+pub(crate) const THEME_PRESETS: [ThemePreset; 6] = [
     ThemePreset::Arctic,
     ThemePreset::Forest,
     ThemePreset::OceanDark,
     ThemePreset::SolarizedDark,
     ThemePreset::TerraCream,
+    ThemePreset::TerraCreamDark,
 ];
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -217,6 +220,7 @@ pub(crate) fn parse_theme_preset(name: &str) -> Option<ThemePreset> {
         "forest" => Some(ThemePreset::Forest),
         "solarized" | "solarized-dark" => Some(ThemePreset::SolarizedDark),
         "terra-cream" => Some(ThemePreset::TerraCream),
+        "terra-cream-dark" => Some(ThemePreset::TerraCreamDark),
         _ => None,
     }
 }
@@ -228,6 +232,7 @@ pub(crate) fn theme_preset_label(preset: ThemePreset) -> &'static str {
         ThemePreset::Forest => "Forest",
         ThemePreset::SolarizedDark => "Solarized Dark",
         ThemePreset::TerraCream => "Terra Cream",
+        ThemePreset::TerraCreamDark => "Terra Cream Dark",
     }
 }
 
@@ -245,6 +250,7 @@ pub(crate) fn theme_by_preset(preset: ThemePreset) -> &'static AppTheme {
         ThemePreset::Forest => &FOREST_THEME,
         ThemePreset::SolarizedDark => &SOLARIZED_DARK_THEME,
         ThemePreset::TerraCream => &TERRA_CREAM_THEME,
+        ThemePreset::TerraCreamDark => &TERRA_CREAM_DARK_THEME,
     }
 }
 

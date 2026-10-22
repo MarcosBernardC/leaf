@@ -129,14 +129,7 @@ pub(super) fn flush_wrapped_spans(
         } else {
             vec![]
         };
-        push_wrapped_prefixed_lines(
-            lines,
-            ranges,
-            spans,
-            first_prefix,
-            vec![],
-            render_width,
-        );
+        push_wrapped_prefixed_lines(lines, ranges, spans, first_prefix, vec![], render_width);
     }
 }
 

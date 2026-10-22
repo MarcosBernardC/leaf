@@ -376,6 +376,118 @@ pub(crate) const TERRA_CREAM_THEME: AppTheme = AppTheme {
     },
 };
 
+pub(crate) const TERRA_CREAM_DARK_THEME: AppTheme = AppTheme {
+    syntax_theme_name: Cow::Borrowed("base16-ocean.dark"),
+    ui: UiTheme {
+        toc_bg: Color::Rgb(33, 31, 28),     // #211F1C
+        toc_border: Color::Rgb(81, 72, 62), // #51483E
+        content_bg: Color::Rgb(33, 31, 28),
+        scrollbar_hover: Color::Rgb(225, 138, 85), // #E18A55
+        status_bg: Color::Rgb(33, 31, 28),
+        status_separator: Color::Rgb(81, 72, 62),
+        status_brand_fg: Color::Rgb(33, 31, 28),
+        status_brand_bg: Color::Rgb(225, 138, 85),
+        status_filename_fg: Color::Rgb(232, 224, 212), // #E8E0D4
+        status_filename_bg: Color::Rgb(48, 43, 38),    // #302B26
+        status_watch_fg: Color::Rgb(154, 181, 138),    // #9AB58A
+        status_watch_bg: Color::Rgb(48, 43, 38),
+        status_reloaded_fg: Color::Rgb(33, 31, 28),
+        status_reloaded_bg: Color::Rgb(154, 181, 138),
+        status_search_fg: Color::Rgb(33, 31, 28),
+        status_search_bg: Color::Rgb(216, 180, 119), // #D8B477
+        status_success_fg: Color::Rgb(154, 181, 138),
+        status_success_bg: Color::Rgb(48, 43, 38),
+        status_warning_fg: Color::Rgb(216, 180, 119),
+        status_error_fg: Color::Rgb(217, 120, 112), // #D97870
+        status_error_bg: Color::Rgb(48, 43, 38),
+        status_shortcut_fg: Color::Rgb(184, 169, 154), // #B8A99A
+        status_percent_fg: Color::Rgb(225, 138, 85),
+        status_dot_fg: Color::Rgb(142, 129, 115), // #8E8173
+        toc_hover_fg: Color::Rgb(232, 224, 212),
+        toc_header_fg: Color::Rgb(184, 169, 154),
+        toc_active_bg: Color::Rgb(48, 43, 38),
+        toc_inactive_bg: Color::Rgb(33, 31, 28),
+        toc_accent: Color::Rgb(225, 138, 85),
+        toc_index_inactive: Color::Rgb(142, 129, 115),
+        toc_primary_active: Color::Rgb(232, 224, 212),
+        toc_primary_inactive: Color::Rgb(207, 195, 179), // #CFC3B3
+        toc_secondary_inactive: Color::Rgb(184, 169, 154),
+        toc_secondary_text_active: Color::Rgb(232, 224, 212),
+        toc_secondary_text_inactive: Color::Rgb(184, 169, 154),
+        ..BASE_DARK_UI
+    },
+    markdown: MarkdownTheme {
+        search_highlight_bg: Color::Rgb(216, 180, 119),
+        search_match_bg: Color::Rgb(225, 138, 85),
+        code_gutter: Color::Rgb(142, 129, 115),
+        blockquote_marker: Color::Rgb(225, 138, 85),
+        list_level_1: Color::Rgb(154, 181, 138),
+        list_level_2: Color::Rgb(143, 185, 194), // #8FB9C2
+        list_level_3: Color::Rgb(183, 160, 188), // #B7A0BC
+        ordered_list: Color::Rgb(225, 138, 85),
+        table_border: Color::Rgb(81, 72, 62),
+        table_separator: Color::Rgb(57, 51, 45), // #39332D
+        table_header: Color::Rgb(216, 180, 119),
+        table_cell: Color::Rgb(232, 224, 212),
+        heading_1: Color::Rgb(225, 138, 85),
+        heading_2: Color::Rgb(154, 181, 138),
+        heading_3: Color::Rgb(143, 185, 194),
+        heading_4: Color::Rgb(183, 160, 188),
+        heading_other: Color::Rgb(207, 195, 179),
+        heading_underline: Color::Rgb(81, 72, 62),
+        code_frame: Color::Rgb(81, 72, 62),
+        code_label: Color::Rgb(184, 169, 154),
+        inline_code_fg: Color::Rgb(229, 160, 146), // #E5A092
+        inline_code_bg: Color::Rgb(48, 43, 38),
+        rule: Color::Rgb(81, 72, 62),
+        link_icon: Color::Rgb(143, 185, 194),
+        link_text: Color::Rgb(143, 185, 194),
+        link_hover: Color::Rgb(225, 138, 85),
+        blockquote_text: Color::Rgb(207, 195, 179),
+        text: Color::Rgb(232, 224, 212),
+        strong_text: Color::Rgb(247, 242, 233), // #F7F2E9
+        latex_inline_fg: Color::Rgb(183, 160, 188),
+        latex_inline_bg: Color::Rgb(48, 43, 38),
+        latex_block_fg: Color::Rgb(183, 160, 188),
+        mermaid_keyword: Color::Rgb(225, 138, 85),
+        mermaid_arrow: Color::Rgb(143, 185, 194),
+        mermaid_label: Color::Rgb(154, 181, 138),
+        mermaid_block_fg: Color::Rgb(207, 195, 179),
+        mark_fg: Color::Rgb(33, 31, 28),
+        mark_bg: Color::Rgb(216, 180, 119),
+        task_checked: Color::Rgb(154, 181, 138),
+        task_unchecked: Color::Rgb(142, 129, 115),
+        alert_note: Color::Rgb(143, 185, 194),
+        alert_tip: Color::Rgb(154, 181, 138),
+        alert_important: Color::Rgb(183, 160, 188),
+        alert_warning: Color::Rgb(216, 180, 119),
+        alert_caution: Color::Rgb(217, 120, 112),
+        footnote_ref: Color::Rgb(143, 185, 194),
+        footnote_text: Color::Rgb(184, 169, 154),
+        ..BASE_DARK_MARKDOWN
+    },
+    diff: DiffTheme {
+        add_fg: Color::Rgb(154, 181, 138),
+        add_bg: Color::Rgb(48, 58, 43),
+        del_fg: Color::Rgb(217, 120, 112),
+        del_bg: Color::Rgb(58, 39, 37),
+        context_fg: Color::Rgb(207, 195, 179),
+        hunk_header_fg: Color::Rgb(143, 185, 194),
+        filename_fg: Color::Rgb(232, 224, 212),
+        frame_fg: Color::Rgb(81, 72, 62),
+        tree_active: Color::Rgb(48, 43, 38),
+        intra_add: Color::Rgb(57, 76, 49),
+        intra_del: Color::Rgb(83, 49, 46),
+        meta_note_fg: Color::Rgb(207, 195, 179),
+        meta_note_bg: Color::Rgb(48, 43, 38),
+        meta_note_sigil_fg: Color::Rgb(225, 138, 85),
+        file_separator_fg: Color::Rgb(184, 169, 154),
+        tree_tag_change: Color::Rgb(225, 138, 85),
+        tree_tag_renamed: Color::Rgb(143, 185, 194),
+        ..BASE_DARK_DIFF
+    },
+};
+
 pub(crate) const FOREST_THEME: AppTheme = AppTheme {
     syntax_theme_name: Cow::Borrowed("InspiredGitHub"),
     ui: UiTheme {
