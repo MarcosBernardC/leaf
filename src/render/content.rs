@@ -160,16 +160,35 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
             }
         };
 
+        let ancestor_count = sticky_route.len().saturating_sub(1);
+
         // Fila superior: ruta de ancestros compacta.
         let route_labels: Vec<Span<'static>> = sticky_route
             .iter()
             .take(sticky_route.len().saturating_sub(1))
             .filter_map(|&idx| {
-                let entry = toc.get(idx)?;
+                toc.get(idx)?;
+
+                let position = sticky_route
+                    .iter()
+                    .take(ancestor_count)
+                    .position(|&ancestor_idx| ancestor_idx == idx)
+                    .unwrap_or(0);
+
+                let progress = if ancestor_count <= 1 {
+                    1.0
+                } else {
+                    position as f32 / (ancestor_count - 1) as f32
+                };
+
+                let shade = (165.0 - progress * 95.0) as u8;
+                let ancestor_style = Style::default()
+                    .fg(ratatui::style::Color::Rgb(shade, shade, shade))
+                    .bg(theme.ui.content_bg);
 
                 Some(Span::styled(
                     format!(" {} ", make_label(idx)),
-                    heading_style(entry.level),
+                    ancestor_style,
                 ))
             })
             .collect();
