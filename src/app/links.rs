@@ -36,14 +36,26 @@ impl App {
     }
 
     pub(crate) fn link_at_position(&self, col: u16, row: u16) -> Option<&LinkSpan> {
-        let (line, index) = self.find_hovered_link(col, row)?;
-        self.link_span(line, index)
+        let (column, row) = self.screen_cell(col, row)?;
+
+        if row < self.sticky_hidden_rows() {
+            return None;
+        }
+
+        let links = &self.screen_geometry.links;
+        let first = links.partition_point(|link| link.row < row);
+
+        links[first..]
+            .iter()
+            .take_while(|link| link.row == row)
+            .find(|link| link.start_col <= column && column < link.end_col)
+            .and_then(|link| self.link_span(self.screen_geometry.row_lines[row], link.span_idx))
     }
 
     pub(crate) fn find_hovered_link(&self, col: u16, row: u16) -> Option<(usize, usize)> {
         let (column, row) = self.screen_cell(col, row)?;
 
-        if row < self.screen_geometry.hidden_rows {
+        if row < self.sticky_hidden_rows() {
             return None;
         }
 
@@ -59,6 +71,7 @@ impl App {
 
     pub(crate) fn line_idx_at(&self, col: u16, row: u16) -> Option<usize> {
         let (_, row) = self.screen_cell(col, row)?;
+
         self.screen_geometry.row_lines.get(row).copied()
     }
 
@@ -103,7 +116,7 @@ impl App {
         self.screen_geometry
             .links
             .iter()
-            .filter(|link| link.row >= self.screen_geometry.hidden_rows)
+            .filter(|link| link.row < self.screen_geometry.row_lines.len())
             .filter_map(|link| {
                 self.link_span(self.screen_geometry.row_lines[link.row], link.span_idx)
             })
@@ -204,6 +217,10 @@ impl App {
             }
             None => {}
         }
+    }
+
+    pub(crate) fn sticky_hidden_rows(&self) -> usize {
+        self.screen_geometry.hidden_rows
     }
 
     pub(crate) fn set_sticky_hidden_rows(&mut self, rows: usize) {
