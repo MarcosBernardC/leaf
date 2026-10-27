@@ -20,6 +20,7 @@ pub(crate) struct ScreenLink {
 pub(crate) struct ScreenGeometry {
     pub(crate) row_lines: Vec<usize>,
     pub(crate) links: Vec<ScreenLink>,
+    pub(crate) hidden_rows: usize,
 }
 
 pub(crate) fn screen_geometry(

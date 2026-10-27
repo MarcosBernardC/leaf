@@ -42,8 +42,14 @@ impl App {
 
     pub(crate) fn find_hovered_link(&self, col: u16, row: u16) -> Option<(usize, usize)> {
         let (column, row) = self.screen_cell(col, row)?;
+
+        if row < self.screen_geometry.hidden_rows {
+            return None;
+        }
+
         let links = &self.screen_geometry.links;
         let first = links.partition_point(|link| link.row < row);
+
         links[first..]
             .iter()
             .take_while(|link| link.row == row)
@@ -93,9 +99,11 @@ impl App {
 
     fn visible_link_ids(&self) -> Vec<LinkId> {
         let mut seen = HashSet::new();
+
         self.screen_geometry
             .links
             .iter()
+            .filter(|link| link.row >= self.screen_geometry.hidden_rows)
             .filter_map(|link| {
                 self.link_span(self.screen_geometry.row_lines[link.row], link.span_idx)
             })
@@ -196,6 +204,11 @@ impl App {
             }
             None => {}
         }
+    }
+
+    pub(crate) fn set_sticky_hidden_rows(&mut self, rows: usize) {
+        self.screen_geometry.hidden_rows = rows;
+        self.retain_visible_link_selection();
     }
 }
 

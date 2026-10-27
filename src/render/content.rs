@@ -1,12 +1,12 @@
 use crate::{
     app::App,
-    markdown::{width::rendered_span_width, LinkId, LinkSpan},
+    markdown::{toc::sticky_heading_route, width::rendered_span_width, LinkId, LinkSpan},
     theme::app_theme,
 };
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::Span,
+    text::{Line, Span},
     widgets::{Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Wrap},
     Frame,
 };
@@ -110,6 +110,12 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     app.refresh_screen_geometry(&visible_lines, content_area.width, content_area.height);
+    let sticky_route = sticky_heading_route(app.toc_entries(), scroll);
+
+    app.set_sticky_hidden_rows(usize::from(
+        !sticky_route.is_empty() && content_area.height > 0,
+    ));
+
     f.render_widget(
         Paragraph::new(visible_lines)
             .style(Style::default().bg(theme.ui.content_bg))
@@ -118,6 +124,75 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
     );
 
     let (mouse_col, mouse_row) = app.mouse_position;
+
+    if !sticky_route.is_empty() && content_area.height > 0 {
+        let toc = app.toc_entries();
+        let mut spans = Vec::new();
+
+        for (position, &idx) in sticky_route.iter().enumerate() {
+            let Some(entry) = toc.get(idx) else {
+                continue;
+            };
+
+            if position > 0 {
+                spans.push(Span::styled(
+                    " › ",
+                    Style::default()
+                        .fg(theme.markdown.heading_underline)
+                        .bg(theme.ui.content_bg),
+                ));
+            }
+
+            let heading_color = match entry.level {
+                1 => theme.markdown.heading_1,
+                2 => theme.markdown.heading_2,
+                3 => theme.markdown.heading_3,
+                4 => theme.markdown.heading_4,
+                _ => theme.markdown.heading_other,
+            };
+
+            let label = if entry.number.is_empty() {
+                entry.title.clone()
+            } else {
+                format!("{} {}", entry.number, entry.title)
+            };
+
+            spans.push(Span::styled(
+                format!(" {label} "),
+                Style::default()
+                    .fg(heading_color)
+                    .bg(theme.ui.content_bg)
+                    .add_modifier(Modifier::BOLD),
+            ));
+        }
+
+        let ellipsis_style = Style::default()
+            .fg(theme.markdown.heading_underline)
+            .bg(theme.ui.content_bg);
+
+        let spans = truncate_sticky_spans(spans, content_area.width as usize, ellipsis_style);
+
+        if !spans.is_empty() {
+            let sticky_area = Rect {
+                x: content_area.x,
+                y: content_area.y,
+                width: content_area.width,
+                height: 1,
+            };
+
+            // Limpiar la fila completa para que no asome el párrafo inferior.
+            f.render_widget(
+                Paragraph::new("").style(Style::default().bg(theme.ui.content_bg)),
+                sticky_area,
+            );
+
+            f.render_widget(
+                Paragraph::new(Line::from(spans)).style(Style::default().bg(theme.ui.content_bg)),
+                sticky_area,
+            );
+        }
+    }
+
     let sb_x = area
         .x
         .saturating_add(area.width)
@@ -227,6 +302,64 @@ fn apply_link_style(
         }
         col = span_end;
     }
+}
+
+fn truncate_sticky_spans(
+    spans: Vec<Span<'static>>,
+    max_width: usize,
+    ellipsis_style: Style,
+) -> Vec<Span<'static>> {
+    let total_width: usize = spans.iter().map(rendered_span_width).sum();
+
+    if total_width <= max_width {
+        return spans;
+    }
+
+    if max_width == 0 {
+        return Vec::new();
+    }
+
+    // Reservar una columna para la elipsis.
+    let content_width = max_width - 1;
+    let mut result = Vec::new();
+    let mut used_width = 0;
+
+    for span in spans {
+        if used_width >= content_width {
+            break;
+        }
+
+        let span_width = rendered_span_width(&span);
+
+        if used_width + span_width <= content_width {
+            used_width += span_width;
+            result.push(span);
+            continue;
+        }
+
+        let mut text = String::new();
+
+        for ch in span.content.chars() {
+            let candidate = Span::styled(ch.to_string(), span.style);
+            let char_width = rendered_span_width(&candidate);
+
+            if used_width + char_width > content_width {
+                break;
+            }
+
+            text.push(ch);
+            used_width += char_width;
+        }
+
+        if !text.is_empty() {
+            result.push(Span::styled(text, span.style));
+        }
+
+        break;
+    }
+
+    result.push(Span::styled("…", ellipsis_style));
+    result
 }
 
 pub(super) fn render_status_bar(f: &mut Frame, app: &mut App, area: Rect) {

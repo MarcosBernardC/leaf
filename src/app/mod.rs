@@ -669,6 +669,10 @@ impl App {
         !self.toc.is_empty()
     }
 
+    pub(crate) fn toc_entries(&self) -> &[TocEntry] {
+        &self.toc
+    }
+
     // Always >= 5 (scroll padding).
     // Use has_content() to check for actual content.
     pub(crate) fn total(&self) -> usize {

@@ -67,3 +67,21 @@ pub(crate) fn normalize_toc(mut toc: Vec<TocEntry>) -> Vec<TocEntry> {
     toc.retain(|entry| entry.level <= max_keep);
     toc
 }
+
+pub(crate) fn sticky_heading_route(toc: &[TocEntry], scroll: usize) -> Vec<usize> {
+    let mut route: Vec<usize> = Vec::new();
+
+    for (idx, entry) in toc.iter().enumerate() {
+        // No mostrar sticky mientras el encabezado siga en la primera fila.
+        if entry.line >= scroll {
+            break;
+        }
+
+        // Un encabezado nuevo reemplaza a los de su mismo nivel
+        // y a todos sus descendientes anteriores.
+        route.retain(|&ancestor_idx| toc[ancestor_idx].level < entry.level);
+        route.push(idx);
+    }
+
+    route
+}

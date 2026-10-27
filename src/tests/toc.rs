@@ -704,3 +704,55 @@ fn focus_top_level_dismisses_hint_when_visible() {
     assert!(!app.is_toc_scroll_hint_visible());
     assert!(app.is_toc_scroll_hint_dismissed());
 }
+
+#[test]
+fn sticky_route_contains_all_active_ancestors() {
+    let entries = toc(&[(1, 0), (2, 5), (3, 10), (2, 20)]);
+
+    assert_eq!(
+        crate::markdown::toc::sticky_heading_route(&entries, 12),
+        vec![0, 1, 2],
+    );
+}
+
+#[test]
+fn sticky_route_replaces_siblings_and_their_descendants() {
+    let entries = toc(&[(1, 0), (2, 5), (3, 10), (2, 20), (3, 25)]);
+
+    assert_eq!(
+        crate::markdown::toc::sticky_heading_route(&entries, 27),
+        vec![0, 3, 4],
+    );
+}
+
+#[test]
+fn sticky_route_preserves_skipped_heading_levels() {
+    let entries = toc(&[(1, 0), (3, 5), (4, 10)]);
+
+    assert_eq!(
+        crate::markdown::toc::sticky_heading_route(&entries, 12),
+        vec![0, 1, 2],
+    );
+}
+
+#[test]
+fn sticky_route_is_empty_before_first_heading_scrolls_away() {
+    let entries = toc(&[(1, 0), (2, 5)]);
+
+    assert!(crate::markdown::toc::sticky_heading_route(&entries, 0).is_empty());
+
+    assert_eq!(
+        crate::markdown::toc::sticky_heading_route(&entries, 1),
+        vec![0],
+    );
+}
+
+#[test]
+fn sticky_route_supports_all_six_markdown_heading_levels() {
+    let entries = toc(&[(1, 0), (2, 1), (3, 2), (4, 3), (5, 4), (6, 5)]);
+
+    assert_eq!(
+        crate::markdown::toc::sticky_heading_route(&entries, 6),
+        vec![0, 1, 2, 3, 4, 5],
+    );
+}
