@@ -756,3 +756,21 @@ fn sticky_route_supports_all_six_markdown_heading_levels() {
         vec![0, 1, 2, 3, 4, 5],
     );
 }
+
+#[test]
+fn sticky_route_updates_two_lines_before_heading_reaches_viewport_top() {
+    let entries = toc(&[(1, 0), (2, 5), (3, 10)]);
+
+    assert_eq!(
+        crate::markdown::toc::sticky_heading_route(&entries, 8),
+        vec![0, 1]
+    );
+    assert_eq!(
+        crate::markdown::toc::sticky_heading_route(&entries, 9),
+        vec![0, 1, 2]
+    );
+    assert_eq!(
+        crate::markdown::toc::sticky_heading_route(&entries, 10),
+        vec![0, 1, 2]
+    );
+}

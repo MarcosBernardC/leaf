@@ -70,10 +70,13 @@ pub(crate) fn normalize_toc(mut toc: Vec<TocEntry>) -> Vec<TocEntry> {
 
 pub(crate) fn sticky_heading_route(toc: &[TocEntry], scroll: usize) -> Vec<usize> {
     let mut route: Vec<usize> = Vec::new();
+    let sticky_threshold = scroll.saturating_add(2);
+    if scroll == 0 {
+        return Vec::new();
+    }
 
     for (idx, entry) in toc.iter().enumerate() {
-        // No mostrar sticky mientras el encabezado siga en la primera fila.
-        if entry.line >= scroll {
+        if entry.line >= sticky_threshold {
             break;
         }
 

@@ -225,15 +225,24 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 height: 1,
             };
 
-            for (sticky_area, spans) in [(route_area, route_spans), (heading_area, active_spans)] {
-                f.render_widget(
-                    Paragraph::new("").style(Style::default().bg(theme.ui.content_bg)),
-                    sticky_area,
-                );
+            let sticky_area = Rect {
+                x: content_area.x,
+                y: content_area.y,
+                width: content_area.width,
+                height: rows,
+            };
+
+            // Fill the entire sticky header with an opaque background first.
+            f.render_widget(
+                Paragraph::new("").style(Style::default().bg(theme.ui.content_bg)),
+                sticky_area,
+            );
+
+            for (row_area, spans) in [(route_area, route_spans), (heading_area, active_spans)] {
                 f.render_widget(
                     Paragraph::new(Line::from(spans))
                         .style(Style::default().bg(theme.ui.content_bg)),
-                    sticky_area,
+                    row_area,
                 );
             }
         } else {
