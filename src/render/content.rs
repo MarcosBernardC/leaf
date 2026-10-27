@@ -163,6 +163,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
         // Fila superior: ruta de ancestros compacta.
         let route_labels: Vec<Span<'static>> = sticky_route
             .iter()
+            .take(sticky_route.len().saturating_sub(1))
             .filter_map(|&idx| {
                 let entry = toc.get(idx)?;
 
