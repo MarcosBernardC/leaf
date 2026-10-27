@@ -425,7 +425,7 @@ leaf --theme rose-pine README.md
 - **Clickable links** : *`Ctrl+Click` to open, double-click to copy, keyboard focus with `x/X`*.
 - **Code block interactions** : *Focus and copy with `y/Y` / `c/C`, or double-click on a block*.
 - **Mouse capture** : *`Shift+M` to toggle mouse capture and let the terminal handle selection*.
-- **Navigation** : *TOC sidebar, active section tracking, heading jumps, and search*.
+- **Navigation** : *TOC sidebar, active section tracking, heading jumps, search, and a two-line sticky heading breadcrumb with a compact ancestor path*.
 - **Terminal UX** : *Theme picker, help popup, file path popup, mouse and keyboard support*.
 - **Custom themes** : *TOML theme files inheriting from built-in presets with color overrides*.
 - **Inline mode** : *Render to stdout with `--inline` for pipes and fzf previews*.

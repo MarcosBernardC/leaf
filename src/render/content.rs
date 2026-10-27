@@ -112,9 +112,13 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
     app.refresh_screen_geometry(&visible_lines, content_area.width, content_area.height);
     let sticky_route = sticky_heading_route(app.toc_entries(), scroll);
 
-    app.set_sticky_hidden_rows(usize::from(
-        !sticky_route.is_empty() && content_area.height > 0,
-    ));
+    let sticky_rows = if sticky_route.is_empty() {
+        0
+    } else {
+        usize::from(content_area.height.min(2))
+    };
+
+    app.set_sticky_hidden_rows(sticky_rows);
 
     f.render_widget(
         Paragraph::new(visible_lines)
@@ -127,23 +131,13 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     if !sticky_route.is_empty() && content_area.height > 0 {
         let toc = app.toc_entries();
-        let mut spans = Vec::new();
+        let active_idx = *sticky_route.last().expect("non-empty sticky route");
+        let ellipsis_style = Style::default()
+            .fg(theme.markdown.heading_underline)
+            .bg(theme.ui.content_bg);
 
-        for (position, &idx) in sticky_route.iter().enumerate() {
-            let Some(entry) = toc.get(idx) else {
-                continue;
-            };
-
-            if position > 0 {
-                spans.push(Span::styled(
-                    " › ",
-                    Style::default()
-                        .fg(theme.markdown.heading_underline)
-                        .bg(theme.ui.content_bg),
-                ));
-            }
-
-            let heading_color = match entry.level {
+        let heading_style = |level: u8| {
+            let heading_color = match level {
                 1 => theme.markdown.heading_1,
                 2 => theme.markdown.heading_2,
                 3 => theme.markdown.heading_3,
@@ -151,28 +145,79 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 _ => theme.markdown.heading_other,
             };
 
-            let label = if entry.number.is_empty() {
+            Style::default()
+                .fg(heading_color)
+                .bg(theme.ui.content_bg)
+                .add_modifier(Modifier::BOLD)
+        };
+
+        let make_label = |idx: usize| {
+            let entry = &toc[idx];
+            if entry.number.is_empty() {
                 entry.title.clone()
             } else {
                 format!("{} {}", entry.number, entry.title)
+            }
+        };
+
+        // Fila superior: ruta de ancestros compacta.
+        let route_labels: Vec<Span<'static>> = sticky_route
+            .iter()
+            .filter_map(|&idx| {
+                let entry = toc.get(idx)?;
+
+                Some(Span::styled(
+                    format!(" {} ", make_label(idx)),
+                    heading_style(entry.level),
+                ))
+            })
+            .collect();
+
+        let route_spans =
+            compact_sticky_route(route_labels, content_area.width as usize, ellipsis_style);
+
+        // Fila inferior: el encabezado activo siempre tiene prioridad.
+        let active_entry = &toc[active_idx];
+        let active_spans = truncate_sticky_spans(
+            vec![Span::styled(
+                format!(" {} ", make_label(active_idx)),
+                heading_style(active_entry.level),
+            )],
+            content_area.width as usize,
+            ellipsis_style,
+        );
+
+        // En esta primera etapa dibujamos las dos líneas cuando hay espacio.
+        // La reserva real de filas y el mapeo de enlaces se ajustarán en la etapa 2.
+        let rows = content_area.height.min(2);
+
+        if rows >= 2 {
+            let route_area = Rect {
+                x: content_area.x,
+                y: content_area.y,
+                width: content_area.width,
+                height: 1,
+            };
+            let heading_area = Rect {
+                x: content_area.x,
+                y: content_area.y + 1,
+                width: content_area.width,
+                height: 1,
             };
 
-            spans.push(Span::styled(
-                format!(" {label} "),
-                Style::default()
-                    .fg(heading_color)
-                    .bg(theme.ui.content_bg)
-                    .add_modifier(Modifier::BOLD),
-            ));
-        }
-
-        let ellipsis_style = Style::default()
-            .fg(theme.markdown.heading_underline)
-            .bg(theme.ui.content_bg);
-
-        let spans = truncate_sticky_spans(spans, content_area.width as usize, ellipsis_style);
-
-        if !spans.is_empty() {
+            for (sticky_area, spans) in [(route_area, route_spans), (heading_area, active_spans)] {
+                f.render_widget(
+                    Paragraph::new("").style(Style::default().bg(theme.ui.content_bg)),
+                    sticky_area,
+                );
+                f.render_widget(
+                    Paragraph::new(Line::from(spans))
+                        .style(Style::default().bg(theme.ui.content_bg)),
+                    sticky_area,
+                );
+            }
+        } else {
+            // En una terminal de una sola fila mostramos únicamente el título actual.
             let sticky_area = Rect {
                 x: content_area.x,
                 y: content_area.y,
@@ -180,14 +225,13 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 height: 1,
             };
 
-            // Limpiar la fila completa para que no asome el párrafo inferior.
             f.render_widget(
                 Paragraph::new("").style(Style::default().bg(theme.ui.content_bg)),
                 sticky_area,
             );
-
             f.render_widget(
-                Paragraph::new(Line::from(spans)).style(Style::default().bg(theme.ui.content_bg)),
+                Paragraph::new(Line::from(active_spans))
+                    .style(Style::default().bg(theme.ui.content_bg)),
                 sticky_area,
             );
         }
@@ -304,6 +348,66 @@ fn apply_link_style(
     }
 }
 
+fn compact_sticky_route(
+    labels: Vec<Span<'static>>,
+    max_width: usize,
+    ellipsis_style: Style,
+) -> Vec<Span<'static>> {
+    if max_width == 0 || labels.is_empty() {
+        return Vec::new();
+    }
+
+    let width_of =
+        |spans: &[Span<'static>]| -> usize { spans.iter().map(rendered_span_width).sum() };
+
+    let separator = || Span::styled(" › ", ellipsis_style);
+    let ellipsis = || Span::styled("…", ellipsis_style);
+
+    let mut full_route = Vec::new();
+
+    for (index, label) in labels.iter().enumerate() {
+        if index > 0 {
+            full_route.push(separator());
+        }
+        full_route.push(label.clone());
+    }
+
+    if width_of(&full_route) <= max_width {
+        return full_route;
+    }
+
+    let first = labels[0].clone();
+    let mut best = vec![first.clone(), separator(), ellipsis()];
+
+    if width_of(&best) > max_width {
+        return truncate_sticky_spans(vec![first], max_width, ellipsis_style);
+    }
+
+    // Mantener los encabezados aceptados en su orden natural.
+    let mut tail: Vec<Span<'static>> = Vec::new();
+
+    for label in labels.iter().skip(1).rev() {
+        let mut candidate_tail = vec![label.clone()];
+        candidate_tail.extend(tail.iter().cloned());
+
+        let mut candidate = vec![first.clone(), separator(), ellipsis()];
+
+        for item in &candidate_tail {
+            candidate.push(separator());
+            candidate.push(item.clone());
+        }
+
+        if width_of(&candidate) > max_width {
+            break;
+        }
+
+        tail = candidate_tail;
+        best = candidate;
+    }
+
+    best
+}
+
 fn truncate_sticky_spans(
     spans: Vec<Span<'static>>,
     max_width: usize,
@@ -371,4 +475,71 @@ pub(super) fn render_status_bar(f: &mut Frame, app: &mut App, area: Rect) {
         Paragraph::new(vec![app.status_line().clone()]).style(Style::default().bg(bar_bg)),
         area,
     );
+}
+
+#[cfg(test)]
+mod sticky_route_tests {
+    use super::*;
+
+    fn label(text: &str) -> Span<'static> {
+        Span::raw(text.to_owned())
+    }
+
+    fn plain_text(spans: &[Span<'static>]) -> String {
+        spans.iter().map(|span| span.content.as_ref()).collect()
+    }
+
+    #[test]
+    fn sticky_route_keeps_short_routes_intact() {
+        let route = compact_sticky_route(vec![label(" A "), label(" B ")], 20, Style::default());
+
+        assert_eq!(plain_text(&route), " A  ›  B ");
+    }
+
+    #[test]
+    fn sticky_route_keeps_first_and_nearest_ancestors() {
+        let route = compact_sticky_route(
+            vec![label(" A "), label(" B "), label(" C "), label(" D ")],
+            19,
+            Style::default(),
+        );
+
+        assert_eq!(plain_text(&route), " A  › … ›  C  ›  D ");
+        assert!(route.iter().map(rendered_span_width).sum::<usize>() <= 19);
+    }
+
+    #[test]
+    fn sticky_route_respects_narrow_widths() {
+        for width in 0..=8 {
+            let route = compact_sticky_route(
+                vec![label(" Ancestor "), label(" Current ")],
+                width,
+                Style::default(),
+            );
+
+            assert!(
+                route.iter().map(rendered_span_width).sum::<usize>() <= width,
+                "route exceeds width {width}"
+            );
+        }
+    }
+
+    #[test]
+    fn sticky_route_truncates_when_only_one_label_is_available() {
+        let route = compact_sticky_route(vec![label(" A very long heading ")], 8, Style::default());
+
+        assert_eq!(plain_text(&route), " A very…");
+        assert!(route.iter().map(rendered_span_width).sum::<usize>() <= 8);
+    }
+
+    #[test]
+    fn sticky_heading_truncation_respects_available_width() {
+        let spans = vec![label(" A very long heading ")];
+
+        let truncated = truncate_sticky_spans(spans, 8, Style::default());
+
+        assert!(truncated.iter().map(rendered_span_width).sum::<usize>() <= 8);
+
+        assert!(plain_text(&truncated).ends_with('…'));
+    }
 }
