@@ -232,9 +232,17 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 height: rows,
             };
 
-            // Fill the entire sticky header with an opaque background first.
+            // Rellenar explícitamente las dos filas con el fondo opaco.
+            let background = Style::default().bg(theme.ui.content_bg);
+            let blank_row = Line::from(Span::styled(
+                " ".repeat(sticky_area.width as usize),
+                background,
+            ));
+
             f.render_widget(
-                Paragraph::new("").style(Style::default().bg(theme.ui.content_bg)),
+                Paragraph::new(vec![blank_row.clone(), blank_row])
+                    .style(background)
+                    .wrap(Wrap { trim: false }),
                 sticky_area,
             );
 
@@ -254,10 +262,19 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 height: 1,
             };
 
+            let background = Style::default().bg(theme.ui.content_bg);
+            let blank_row = Line::from(Span::styled(
+                " ".repeat(sticky_area.width as usize),
+                background,
+            ));
+
             f.render_widget(
-                Paragraph::new("").style(Style::default().bg(theme.ui.content_bg)),
+                Paragraph::new(blank_row)
+                    .style(background)
+                    .wrap(Wrap { trim: false }),
                 sticky_area,
             );
+
             f.render_widget(
                 Paragraph::new(Line::from(active_spans))
                     .style(Style::default().bg(theme.ui.content_bg)),
