@@ -155,7 +155,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
         let heading_style = |_level: u8| {
             Style::reset()
                 .fg(theme.markdown.heading_1)
-                .bg(theme.ui.content_bg)
+                .bg(Color::Rgb(73, 56, 45))
                 .add_modifier(Modifier::BOLD)
         };
 
@@ -253,12 +253,29 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 sticky_area,
             );
 
-            for (row_area, spans) in [(route_area, route_spans), (heading_area, active_spans)] {
-                f.render_widget(
-                    Paragraph::new(Line::from(spans)).style(Style::reset().bg(theme.ui.content_bg)),
-                    row_area,
-                );
-            }
+            f.render_widget(
+                Paragraph::new(Line::from(route_spans))
+                    .style(Style::reset().bg(theme.ui.content_bg)),
+                route_area,
+            );
+
+            let active_bg = Color::Rgb(73, 56, 45);
+            let active_background = Style::reset().bg(active_bg);
+
+            let active_blank_row = Line::from(Span::styled(
+                " ".repeat(heading_area.width as usize),
+                active_background,
+            ));
+
+            f.render_widget(
+                Paragraph::new(active_blank_row.clone()).style(active_background),
+                heading_area,
+            );
+
+            f.render_widget(
+                Paragraph::new(Line::from(active_spans)).style(active_background),
+                heading_area,
+            );
         } else {
             // En una terminal de una sola fila mostramos únicamente el título actual.
             let sticky_area = Rect {
