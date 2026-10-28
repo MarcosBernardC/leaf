@@ -151,17 +151,9 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
             .bg(theme.ui.content_bg)
             .add_modifier(Modifier::BOLD);
 
-        let heading_style = |level: u8| {
-            let heading_color = match level {
-                1 => theme.markdown.heading_1,
-                2 => theme.markdown.heading_2,
-                3 => theme.markdown.heading_3,
-                4 => theme.markdown.heading_4,
-                _ => theme.markdown.heading_other,
-            };
-
+        let heading_style = |_level: u8| {
             Style::reset()
-                .fg(heading_color)
+                .fg(theme.markdown.heading_2)
                 .bg(theme.ui.content_bg)
                 .add_modifier(Modifier::BOLD)
         };

@@ -162,13 +162,7 @@ pub(super) fn push_heading_lines(
     render_width: usize,
     theme: &MarkdownTheme,
 ) {
-    let color: Color = match level {
-        1 => theme.heading_1,
-        2 => theme.heading_2,
-        3 => theme.heading_3,
-        4 => theme.heading_4,
-        _ => theme.heading_other,
-    };
+    let color: Color = theme.heading_2;
     let modifier = match level {
         1..=5 => Modifier::BOLD,
         _ => Modifier::ITALIC,
