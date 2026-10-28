@@ -14,6 +14,20 @@ use std::collections::HashMap;
 
 use super::{CONTENT_HORIZONTAL_PADDING, SCROLLBAR_WIDTH};
 
+fn sticky_breadcrumb_color(base: Color, progress: f32) -> Color {
+    let Color::Rgb(r, g, b) = base else {
+        return base;
+    };
+
+    let progress = progress.clamp(0.0, 1.0);
+    let lightness = 0.65 * (1.0 - progress);
+
+    let lighten =
+        |channel: u8| (f32::from(channel) + (255.0 - f32::from(channel)) * lightness).round() as u8;
+
+    Color::Rgb(lighten(r), lighten(g), lighten(b))
+}
+
 pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let viewport_height = area.height as usize;
     let theme = app_theme();
@@ -153,20 +167,15 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
         let make_label = |idx: usize| toc[idx].title.clone();
 
+        // Fila superior: gradiente del color definido por el tema.
         let ancestor_count = sticky_route.len().saturating_sub(1);
 
-        // Fila superior: ruta de ancestros compacta.
         let route_labels: Vec<Span<'static>> = sticky_route
             .iter()
-            .take(sticky_route.len().saturating_sub(1))
-            .filter_map(|&idx| {
+            .take(ancestor_count)
+            .enumerate()
+            .filter_map(|(position, &idx)| {
                 toc.get(idx)?;
-
-                let position = sticky_route
-                    .iter()
-                    .take(ancestor_count)
-                    .position(|&ancestor_idx| ancestor_idx == idx)
-                    .unwrap_or(0);
 
                 let progress = if ancestor_count <= 1 {
                     1.0
@@ -174,9 +183,11 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     position as f32 / (ancestor_count - 1) as f32
                 };
 
-                let shade = (165.0 - progress * 95.0) as u8;
                 let ancestor_style = Style::default()
-                    .fg(ratatui::style::Color::Rgb(shade, shade, shade))
+                    .fg(sticky_breadcrumb_color(
+                        theme.markdown.sticky_breadcrumb,
+                        progress,
+                    ))
                     .bg(theme.ui.content_bg);
 
                 Some(Span::styled(
@@ -409,10 +420,27 @@ fn compact_sticky_route(
     let separator = || Span::styled(" › ", ellipsis_style);
     let ellipsis = || Span::styled("…", ellipsis_style);
 
-    let mut full_route = Vec::new();
+    let fixed_trim = labels.len() > 3;
+    let first = labels[0].clone();
 
-    for (index, label) in labels.iter().enumerate() {
-        if index > 0 {
+    // Para rutas largas: raíz + elipsis + los dos niveles más recientes.
+    let tail_start = labels.len().saturating_sub(2);
+    let tail_source = if fixed_trim {
+        &labels[tail_start..]
+    } else {
+        &labels[1..]
+    };
+
+    let mut full_route = vec![first.clone()];
+
+    if fixed_trim {
+        full_route.push(ellipsis());
+    } else if !tail_source.is_empty() {
+        full_route.push(separator());
+    }
+
+    for (index, label) in tail_source.iter().enumerate() {
+        if index > 0 || fixed_trim {
             full_route.push(separator());
         }
         full_route.push(label.clone());
@@ -422,15 +450,48 @@ fn compact_sticky_route(
         return full_route;
     }
 
-    let first = labels[0].clone();
+    if fixed_trim {
+        // Mantener la raíz y la elipsis; añadir primero el nivel más cercano.
+        let mut best = vec![first.clone(), ellipsis()];
+
+        if width_of(&best) > max_width {
+            return truncate_sticky_spans(vec![first], max_width, ellipsis_style);
+        }
+
+        let mut tail = Vec::new();
+
+        for label in tail_source.iter().rev() {
+            let mut candidate_tail = vec![label.clone()];
+            candidate_tail.extend(tail.iter().cloned());
+
+            let mut candidate = vec![first.clone(), ellipsis(), separator()];
+
+            for (index, item) in candidate_tail.iter().enumerate() {
+                if index > 0 {
+                    candidate.push(separator());
+                }
+                candidate.push(item.clone());
+            }
+
+            if width_of(&candidate) > max_width {
+                break;
+            }
+
+            tail = candidate_tail;
+            best = candidate;
+        }
+
+        return best;
+    }
+
+    // Para rutas cortas, conservar el comportamiento de compactación horizontal.
     let mut best = vec![first.clone(), separator(), ellipsis()];
 
     if width_of(&best) > max_width {
         return truncate_sticky_spans(vec![first], max_width, ellipsis_style);
     }
 
-    // Mantener los encabezados aceptados en su orden natural.
-    let mut tail: Vec<Span<'static>> = Vec::new();
+    let mut tail = Vec::new();
 
     for label in labels.iter().skip(1).rev() {
         let mut candidate_tail = vec![label.clone()];
@@ -550,7 +611,7 @@ mod sticky_route_tests {
             Style::default(),
         );
 
-        assert_eq!(plain_text(&route), " A  › … ›  C  ›  D ");
+        assert_eq!(plain_text(&route), " A … ›  C  ›  D ");
         assert!(route.iter().map(rendered_span_width).sum::<usize>() <= 19);
     }
 

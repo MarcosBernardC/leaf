@@ -150,6 +150,7 @@ pub(crate) struct MarkdownTheme {
     pub(crate) alert_caution: Color,
     pub(crate) footnote_ref: Color,
     pub(crate) footnote_text: Color,
+    pub(crate) sticky_breadcrumb: Color,
 }
 
 pub(crate) const DEFAULT_PRESET: ThemePreset = ThemePreset::OceanDark;
