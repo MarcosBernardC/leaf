@@ -146,7 +146,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
     if !sticky_route.is_empty() && content_area.height > 0 {
         let toc = app.toc_entries();
         let active_idx = *sticky_route.last().expect("non-empty sticky route");
-        let ellipsis_style = Style::default()
+        let ellipsis_style = Style::reset()
             .fg(theme.markdown.sticky_breadcrumb)
             .bg(theme.ui.content_bg)
             .add_modifier(Modifier::BOLD);
@@ -160,7 +160,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 _ => theme.markdown.heading_other,
             };
 
-            Style::default()
+            Style::reset()
                 .fg(heading_color)
                 .bg(theme.ui.content_bg)
                 .add_modifier(Modifier::BOLD)
@@ -184,7 +184,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     position as f32 / (ancestor_count - 1) as f32
                 };
 
-                let ancestor_style = Style::default()
+                let ancestor_style = Style::reset()
                     .fg(sticky_breadcrumb_color(
                         theme.markdown.sticky_breadcrumb,
                         progress,
@@ -245,7 +245,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
             };
 
             // Rellenar explícitamente las dos filas con el fondo opaco.
-            let background = Style::default().bg(theme.ui.content_bg);
+            let background = Style::reset().bg(theme.ui.content_bg);
             let blank_row = Line::from(Span::styled(
                 " ".repeat(sticky_area.width as usize),
                 background,
@@ -260,8 +260,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
             for (row_area, spans) in [(route_area, route_spans), (heading_area, active_spans)] {
                 f.render_widget(
-                    Paragraph::new(Line::from(spans))
-                        .style(Style::default().bg(theme.ui.content_bg)),
+                    Paragraph::new(Line::from(spans)).style(Style::reset().bg(theme.ui.content_bg)),
                     row_area,
                 );
             }
@@ -274,7 +273,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 height: 1,
             };
 
-            let background = Style::default().bg(theme.ui.content_bg);
+            let background = Style::reset().bg(theme.ui.content_bg);
             let blank_row = Line::from(Span::styled(
                 " ".repeat(sticky_area.width as usize),
                 background,
