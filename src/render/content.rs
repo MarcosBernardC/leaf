@@ -151,14 +151,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 .add_modifier(Modifier::BOLD)
         };
 
-        let make_label = |idx: usize| {
-            let entry = &toc[idx];
-            if entry.number.is_empty() {
-                entry.title.clone()
-            } else {
-                format!("{} {}", entry.number, entry.title)
-            }
-        };
+        let make_label = |idx: usize| toc[idx].title.clone();
 
         let ancestor_count = sticky_route.len().saturating_sub(1);
 
@@ -200,7 +193,14 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
         let active_entry = &toc[active_idx];
         let active_spans = truncate_sticky_spans(
             vec![Span::styled(
-                format!(" {} ", make_label(active_idx)),
+                format!(
+                    " {} ",
+                    if active_entry.number.is_empty() {
+                        active_entry.title.clone()
+                    } else {
+                        format!("{} {}", active_entry.number, active_entry.title)
+                    }
+                ),
                 heading_style(active_entry.level),
             )],
             content_area.width as usize,
