@@ -14,18 +14,19 @@ use std::collections::HashMap;
 
 use super::{CONTENT_HORIZONTAL_PADDING, SCROLLBAR_WIDTH};
 
-fn sticky_breadcrumb_color(base: Color, progress: f32) -> Color {
-    let Color::Rgb(r, g, b) = base else {
+fn sticky_breadcrumb_color(base: Color, background: Color, progress: f32) -> Color {
+    let (Color::Rgb(r, g, b), Color::Rgb(br, bg, bb)) = (base, background) else {
         return base;
     };
 
-    let progress = progress.clamp(0.0, 1.0);
-    let lightness = 0.65 * (1.0 - progress);
+    let blend = 0.20 * (1.0 - progress.clamp(0.0, 1.0));
 
-    let lighten =
-        |channel: u8| (f32::from(channel) + (255.0 - f32::from(channel)) * lightness).round() as u8;
+    let channel = |foreground: u8, background: u8| {
+        (f32::from(foreground) + (f32::from(background) - f32::from(foreground)) * blend).round()
+            as u8
+    };
 
-    Color::Rgb(lighten(r), lighten(g), lighten(b))
+    Color::Rgb(channel(r, br), channel(g, bg), channel(b, bb))
 }
 
 pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
@@ -153,7 +154,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
         let heading_style = |_level: u8| {
             Style::reset()
-                .fg(theme.markdown.heading_2)
+                .fg(theme.markdown.heading_1)
                 .bg(theme.ui.content_bg)
                 .add_modifier(Modifier::BOLD)
         };
@@ -179,6 +180,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 let ancestor_style = Style::reset()
                     .fg(sticky_breadcrumb_color(
                         theme.markdown.sticky_breadcrumb,
+                        theme.ui.content_bg,
                         progress,
                     ))
                     .bg(theme.ui.content_bg)
