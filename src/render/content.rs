@@ -14,6 +14,20 @@ use std::collections::HashMap;
 
 use super::{CONTENT_HORIZONTAL_PADDING, SCROLLBAR_WIDTH};
 
+fn sticky_breadcrumb_color(base: Color, progress: f32) -> Color {
+    let Color::Rgb(r, g, b) = base else {
+        return base;
+    };
+
+    let progress = progress.clamp(0.0, 1.0);
+    let lightness = 0.65 * (1.0 - progress);
+
+    let lighten =
+        |channel: u8| (f32::from(channel) + (255.0 - f32::from(channel)) * lightness).round() as u8;
+
+    Color::Rgb(lighten(r), lighten(g), lighten(b))
+}
+
 pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let viewport_height = area.height as usize;
     let theme = app_theme();
@@ -153,20 +167,15 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
         let make_label = |idx: usize| toc[idx].title.clone();
 
+        // Fila superior: gradiente del color definido por el tema.
         let ancestor_count = sticky_route.len().saturating_sub(1);
 
-        // Fila superior: ruta de ancestros compacta.
         let route_labels: Vec<Span<'static>> = sticky_route
             .iter()
-            .take(sticky_route.len().saturating_sub(1))
-            .filter_map(|&idx| {
+            .take(ancestor_count)
+            .enumerate()
+            .filter_map(|(position, &idx)| {
                 toc.get(idx)?;
-
-                let position = sticky_route
-                    .iter()
-                    .take(ancestor_count)
-                    .position(|&ancestor_idx| ancestor_idx == idx)
-                    .unwrap_or(0);
 
                 let progress = if ancestor_count <= 1 {
                     1.0
@@ -174,9 +183,11 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     position as f32 / (ancestor_count - 1) as f32
                 };
 
-                let shade = (165.0 - progress * 95.0) as u8;
                 let ancestor_style = Style::default()
-                    .fg(ratatui::style::Color::Rgb(shade, shade, shade))
+                    .fg(sticky_breadcrumb_color(
+                        theme.markdown.sticky_breadcrumb,
+                        progress,
+                    ))
                     .bg(theme.ui.content_bg);
 
                 Some(Span::styled(

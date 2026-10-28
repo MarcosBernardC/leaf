@@ -168,6 +168,7 @@ theme_overrides!(MarkdownThemeOverrides for MarkdownTheme {
     heading_4,
     heading_other,
     heading_underline,
+    sticky_breadcrumb,
     code_frame,
     code_label,
     inline_code_fg,
