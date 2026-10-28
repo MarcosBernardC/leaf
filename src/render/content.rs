@@ -409,10 +409,27 @@ fn compact_sticky_route(
     let separator = || Span::styled(" › ", ellipsis_style);
     let ellipsis = || Span::styled("…", ellipsis_style);
 
-    let mut full_route = Vec::new();
+    let fixed_trim = labels.len() > 3;
+    let first = labels[0].clone();
 
-    for (index, label) in labels.iter().enumerate() {
-        if index > 0 {
+    // Para rutas largas: raíz + elipsis + los dos niveles más recientes.
+    let tail_start = labels.len().saturating_sub(2);
+    let tail_source = if fixed_trim {
+        &labels[tail_start..]
+    } else {
+        &labels[1..]
+    };
+
+    let mut full_route = vec![first.clone()];
+
+    if fixed_trim {
+        full_route.push(ellipsis());
+    } else if !tail_source.is_empty() {
+        full_route.push(separator());
+    }
+
+    for (index, label) in tail_source.iter().enumerate() {
+        if index > 0 || fixed_trim {
             full_route.push(separator());
         }
         full_route.push(label.clone());
@@ -422,15 +439,48 @@ fn compact_sticky_route(
         return full_route;
     }
 
-    let first = labels[0].clone();
+    if fixed_trim {
+        // Mantener la raíz y la elipsis; añadir primero el nivel más cercano.
+        let mut best = vec![first.clone(), ellipsis()];
+
+        if width_of(&best) > max_width {
+            return truncate_sticky_spans(vec![first], max_width, ellipsis_style);
+        }
+
+        let mut tail = Vec::new();
+
+        for label in tail_source.iter().rev() {
+            let mut candidate_tail = vec![label.clone()];
+            candidate_tail.extend(tail.iter().cloned());
+
+            let mut candidate = vec![first.clone(), ellipsis(), separator()];
+
+            for (index, item) in candidate_tail.iter().enumerate() {
+                if index > 0 {
+                    candidate.push(separator());
+                }
+                candidate.push(item.clone());
+            }
+
+            if width_of(&candidate) > max_width {
+                break;
+            }
+
+            tail = candidate_tail;
+            best = candidate;
+        }
+
+        return best;
+    }
+
+    // Para rutas cortas, conservar el comportamiento de compactación horizontal.
     let mut best = vec![first.clone(), separator(), ellipsis()];
 
     if width_of(&best) > max_width {
         return truncate_sticky_spans(vec![first], max_width, ellipsis_style);
     }
 
-    // Mantener los encabezados aceptados en su orden natural.
-    let mut tail: Vec<Span<'static>> = Vec::new();
+    let mut tail = Vec::new();
 
     for label in labels.iter().skip(1).rev() {
         let mut candidate_tail = vec![label.clone()];
@@ -550,7 +600,7 @@ mod sticky_route_tests {
             Style::default(),
         );
 
-        assert_eq!(plain_text(&route), " A  › … ›  C  ›  D ");
+        assert_eq!(plain_text(&route), " A … ›  C  ›  D ");
         assert!(route.iter().map(rendered_span_width).sum::<usize>() <= 19);
     }
 
