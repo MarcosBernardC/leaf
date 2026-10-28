@@ -152,10 +152,33 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
             .bg(theme.ui.content_bg)
             .add_modifier(Modifier::BOLD);
 
+        let active_bg = match theme.ui.toc_active_bg {
+            Color::Rgb(r, g, b) => {
+                let is_dark = (u32::from(r) * 299
+                    + u32::from(g) * 587
+                    + u32::from(b) * 114)
+                    / 1000
+                    < 128;
+
+                let adjust = |channel: u8| {
+                    let value = f32::from(channel);
+                    let adjusted = if is_dark {
+                        value + (255.0 - value) * 0.1
+                    } else {
+                        value * 0.9
+                    };
+                    adjusted.round() as u8
+                };
+
+                Color::Rgb(adjust(r), adjust(g), adjust(b))
+            }
+            color => color,
+        };
+
         let heading_style = |_level: u8| {
             Style::reset()
                 .fg(theme.markdown.heading_1)
-                .bg(Color::Rgb(73, 56, 45))
+                .bg(active_bg)
                 .add_modifier(Modifier::BOLD)
         };
 
@@ -259,7 +282,6 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 route_area,
             );
 
-            let active_bg = Color::Rgb(73, 56, 45);
             let active_background = Style::reset().bg(active_bg);
 
             let active_blank_row = Line::from(Span::styled(
@@ -299,8 +321,7 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
             );
 
             f.render_widget(
-                Paragraph::new(Line::from(active_spans))
-                    .style(Style::default().bg(theme.ui.content_bg)),
+                Paragraph::new(Line::from(active_spans)).style(Style::reset().bg(active_bg)),
                 sticky_area,
             );
         }
