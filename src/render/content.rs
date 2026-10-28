@@ -157,11 +157,8 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
         let active_bg = match theme.ui.toc_active_bg {
             Color::Rgb(r, g, b) => {
-                let is_dark = (u32::from(r) * 299
-                    + u32::from(g) * 587
-                    + u32::from(b) * 114)
-                    / 1000
-                    < 128;
+                let is_dark =
+                    (u32::from(r) * 299 + u32::from(g) * 587 + u32::from(b) * 114) / 1000 < 128;
 
                 let adjust = |channel: u8| {
                     let value = f32::from(channel);
