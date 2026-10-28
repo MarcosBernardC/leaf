@@ -147,8 +147,9 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
         let toc = app.toc_entries();
         let active_idx = *sticky_route.last().expect("non-empty sticky route");
         let ellipsis_style = Style::default()
-            .fg(theme.markdown.heading_underline)
-            .bg(theme.ui.content_bg);
+            .fg(theme.markdown.sticky_breadcrumb)
+            .bg(theme.ui.content_bg)
+            .add_modifier(Modifier::BOLD);
 
         let heading_style = |level: u8| {
             let heading_color = match level {
