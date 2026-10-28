@@ -126,11 +126,14 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     app.refresh_screen_geometry(&visible_lines, content_area.width, content_area.height);
     let sticky_route = sticky_heading_route(app.toc_entries(), scroll);
+    let has_sticky_ancestors = sticky_route.len() > 1;
 
     let sticky_rows = if sticky_route.is_empty() {
         0
     } else {
-        usize::from(content_area.height.min(2))
+        content_area
+            .height
+            .min(if has_sticky_ancestors { 2 } else { 1 }) as usize
     };
 
     app.set_sticky_hidden_rows(sticky_rows);
@@ -237,9 +240,10 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
             ellipsis_style,
         );
 
-        // En esta primera etapa dibujamos las dos líneas cuando hay espacio.
-        // La reserva real de filas y el mapeo de enlaces se ajustarán en la etapa 2.
-        let rows = content_area.height.min(2);
+        // El encabezado raíz ocupa una fila; las rutas con ancestros ocupan dos.
+        let rows = content_area
+            .height
+            .min(if has_sticky_ancestors { 2 } else { 1 });
 
         if rows >= 2 {
             let route_area = Rect {

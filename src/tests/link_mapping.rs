@@ -114,14 +114,13 @@ fn assert_clicks_match_drawn_links(
     }
     let mut expected: HashMap<(u16, u16), LinkId> = HashMap::new();
 
-    let sticky_visible =
-        !crate::markdown::toc::sticky_heading_route(app.toc_entries(), app.scroll()).is_empty();
+    let sticky_hidden_rows = app.sticky_hidden_rows() as u16;
 
     for (hovered, id) in owners {
         app.hovered_link = Some(hovered);
         let buffer = draw(app, width, height);
         for y in area.y..area.bottom() {
-            if sticky_visible && y < area.y + area.height.min(2) {
+            if y < area.y + area.height.min(sticky_hidden_rows) {
                 continue;
             }
             let mut x = left;
