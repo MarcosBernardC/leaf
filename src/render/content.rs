@@ -181,7 +181,8 @@ pub(super) fn render_content_panel(f: &mut Frame, app: &mut App, area: Rect) {
                         theme.markdown.sticky_breadcrumb,
                         progress,
                     ))
-                    .bg(theme.ui.content_bg);
+                    .bg(theme.ui.content_bg)
+                    .add_modifier(Modifier::BOLD);
 
                 Some(Span::styled(
                     format!(" {} ", make_label(idx)),
